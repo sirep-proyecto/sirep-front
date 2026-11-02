@@ -76,10 +76,10 @@ src/
 │   ├── reportes/[numero]/page.tsx     # vista de corrección (resuelve params)
 │   └── dev/regiones/page.tsx          # calibración, solo desarrollo
 ├── components/
-│   ├── ui/                            # shadcn/ui vendorizado
-│   │   ├── button.tsx  input.tsx  badge.tsx  skeleton.tsx
+│   ├── ui/                            # shadcn/ui vendorizado a mano
+│   │   ├── boton.tsx  entrada.tsx  insignia.tsx  esqueleto.tsx
 │   └── layout/
-│       ├── cabecera-app.tsx  contenedor-app.tsx  pie-app.tsx
+│       ├── cabecera-app.tsx  pie-app.tsx
 ├── features/revision/
 │   ├── components/
 │   │   ├── bandeja/                   # resumen, herramientas, tabla, tarjetas, estados
@@ -92,11 +92,12 @@ src/
 │   └── lib/                           # recorte, orden, filtros, dudosos, formato
 ├── config/
 │   ├── campos-formulario.ts           # inventario provisional (fuente de verdad)
+│   ├── escaneo-falso.ts               # dibujo SVG del escaneo inventado
+│   ├── entorno.ts                     # guardas de pantallas de desarrollo
 │   ├── sesion.ts                      # usuario simulado (TODO auth)
 │   └── regiones/                      # un mapa por diseño de talonario
 ├── mocks/
-│   ├── reportes.ts                    # 12 reportes simulados
-│   └── escaneo/                       # SVG falso generado desde el mapa
+│   └── reportes.ts                    # 12 reportes simulados
 └── styles/
     └── tokens.css                     # colores, tipografía, radios, sombras
 ```
@@ -150,6 +151,15 @@ src/
 - **Lib** (`lib/`): funciones puras y probadas (recorte, filtros, orden, avance de dudosos).
 - **Hooks** (`hooks/`): estado de UI y orquestación; no renderizan.
 - **Componentes** (`components/`): solo presentación; reciben datos y callbacks.
+
+### Decisiones de implementación
+
+| Decisión | Detalle | Justificación |
+| --- | --- | --- |
+| Primitivas de UI vendorizadas | `src/components/ui/{boton,entrada,insignia,esqueleto}.tsx` con el contrato de shadcn/ui (`cva` + `tailwind-merge`), sin `npx shadcn add` | Evita arrastrar `components.json` y `tw-animate-css` a un proyecto con tokens propios; al integrar a RP-TECH se reemplazan por los componentes del sistema sin tocar las pantallas |
+| Nombres de archivo en español | `boton.tsx` en lugar de `button.tsx` | Consistente con `lib/`, `types/` y `config/`, que ya usan español |
+| Dibujo del escaneo en `config/` | `src/config/escaneo-falso.ts` en lugar de `src/mocks/escaneo-svg.ts` | La regla de oro prohíbe que los componentes importen `mocks/`; el dibujo es configuración compartida y el contenido manuscrito sí llega por props desde el repositorio |
+| Escaneo generado desde el mapa | `HojaEscaneada` dibuja etiquetas y valores usando `MAPA_TALONARIO_2005` | Un cambio de talonario no obliga a redibujar el SVG a mano y los recortes coinciden por construcción |
 
 ### Decisiones de interacción
 

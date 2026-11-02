@@ -25,12 +25,12 @@ Estrategia de entrega: `single-pr` (el alcance es una sola feature de prototipo)
 ## Tasks
 
 - [x] **T1** — Documento de plan visual y arquitectura. `docs/frontend-plan.md`. Inline. Commit `docs(plan)`.
-- [ ] **T2** — Fuentes, layout global y primitivas de UI. **Ruta: inline** (es el núcleo visual del que dependen las dos unidades paralelas). Commit `feat(layout)`.
+- [x] **T2** — Fuentes, layout global y primitivas de UI. **Ruta: inline** (es el núcleo visual del que dependen las dos unidades paralelas). Commit `feat(layout)`. Evidencia: `tsc` y `eslint` limpios.
 - [x] **T3** — Tipos, inventario de campos y mapas de regiones. Inline. Commit `feat(dominio)`. Evidencia: `tsc --noEmit` sin errores tras corregir el cast de `CAMPOS_POR_SECCION`.
 - [x] **T4** — Utilidades puras probadas: recorte, filtros/orden, dudosos. Inline + `vitest`. Commit `feat(utilidades)`. Evidencia: 17 pruebas en verde.
-- [ ] **T5** — Datos simulados, repositorio, contexto React y escaneo SVG falso. **Ruta: inline** (contrato compartido por las dos unidades paralelas). Commit `feat(datos)`.
+- [x] **T5** — Datos simulados, repositorio, contexto React y escaneo SVG falso. **Ruta: inline** (contrato compartido por las dos unidades paralelas). Commit `feat(datos)`. Evidencia: 42 pruebas en verde, incluida la nueva suite del repositorio y de los mocks.
 - [ ] **T6** — Bandeja con resumen, herramientas, tabla/tarjetas y estados. **Ruta: delegada a un writer** (unidad pesada y de superficie disjoint). Commit `feat(bandeja)`.
-- [ ] **T7** — Página `/dev/regiones` y cobertura del mapa. **Ruta: inline** (depende del SVG compartido). Commit `feat(regiones)`.
+- [x] **T7** — Página `/dev/regiones` y cobertura del mapa. **Ruta: inline** (depende del SVG compartido). Commit `feat(calibracion)`. Evidencia: `tsc`, `eslint` y 42 pruebas en verde.
 - [ ] **T8** — Visor de escaneo, vista de corrección, teclado, progreso, móvil y cierre. **Ruta: delegada a un writer** (unidad pesada y de superficie disjoint respecto de T6). Commit `feat(correccion)`.
 - [ ] **T9** — README "Frontend", verificación `tsc`/`eslint`/`vitest`/`build` y revisión responsive. **Ruta: inline**. Commit `docs(readme)`.
 
@@ -49,3 +49,6 @@ Estrategia de entrega: `single-pr` (el alcance es una sola feature de prototipo)
 - **L4 (2026-11-02)** — Decisión: el estado del reporte se deriva de los campos (último dudoso resuelto ⇒ `completo`), con reapertura explícita. Evita un botón de completar que pueda contradecir la evidencia.
 - **L5 (2026-11-02)** — Reanudación: `docs/frontend-plan.md`, tipos, configuración, lib con17 pruebas y mocks ya existían sin commitear. Línea base observada: `tsc --noEmit` con un error en `CAMPOS_POR_SECCION` (cast insuficiente) → corregido con doble cast documentado; `vitest run` con17/17 en verde. Se restauró la raíz `.gitignore` (había sido borrada en el worktree: protege `.env*` y `escaneos-reales/`). Rutas declaradas en la sección de superficies: T6 y T8 delegadas en paralelo (unidades pesadas, superficies disjoint), T2/T5/T7/T9 en el padre.
 - **L6 (2026-11-02)** — Decisión: las primitivas de UI se vendorizan a mano con el mismo contrato de shadcn/ui (`cva` + `tailwind-merge` ya instalados) en lugar de `npx shadcn add`, para no arrastrar `components.json` ni `tw-animate-css` a un proyecto con tokens propios. Se documenta como decisión en `docs/frontend-plan.md`.
+- **L7 (2026-11-02)** — Cimiento construido y commiteado: `layout.tsx` con las tres familias, cabecera/pie, primitivas (`boton`, `entrada`, `insignia`, `esqueleto`), repositorio simulado + contexto, `HojaEscaneada` y `RecorteEscaneo`. Evidencia: 42 pruebas, `tsc --noEmit` y `eslint` limpios.
+- **L8 (2026-11-02)** — Defecto encontrado por la nueva suite de mocks: `construirCampos` no mapeaba la cabecera del reporte a los campos, así que `cliente`, `fecha`, `equipo`, `tecnico` y `numero_reporte` llegaban `null` con confianza alta. Corregido en `mocks/reportes.ts` (la fecha del campo se escribe como en el talonario, `día/mes/año`, y `fecha_reporte` sigue en ISO).
+- **L9 (2026-11-02)** — Decisión: el dibujo del escaneo falso vive en `src/config/escaneo-falso.ts`, no en `src/mocks/escaneo-svg.ts`. Motivo: la regla de oro del proyecto prohíbe que los componentes importen `mocks/`, y el artefacto visual es configuración compartida, no datos simulados. El contenido manuscrito sí llega desde el repositorio.
