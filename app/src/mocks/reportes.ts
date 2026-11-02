@@ -9,6 +9,7 @@
 
 import { CAMPOS_FORMULARIO } from "@/config/campos-formulario";
 import { MAPA_TALONARIO_2005 } from "@/config/regiones/talonario-2005-a4";
+import { derivarEstadoReporte } from "@/features/revision/lib/estados";
 import type { IdCampo } from "@/features/revision/types/campos";
 import type {
   CampoReporte,
@@ -53,10 +54,26 @@ function fechaTalonario(iso: string): string {
 }
 
 function construirCampos(semilla: SemillaReporte): CampoReporte[] {
+  /*
+   * La cabecera del reporte también es campo del formulario. Sin este mapa,
+   * cliente, fecha, técnico y N° quedarían vacíos en la vista de corrección
+   * aunque el reporte los tenga, y el modelo parecería no haber leído nada.
+   * La fecha se guarda como se escribe en el talonario (día/mes/año); la fecha
+   * estructura del reporte sigue en ISO para poder ordenarla y formatearla.
+   */
+  const valoresBase: Partial<Record<IdCampo, string | null>> = {
+    numero_reporte: semilla.numero,
+    fecha: fechaTalonario(semilla.fecha),
+    cliente: semilla.cliente,
+    equipo: semilla.equipo,
+    tecnico: semilla.tecnico,
+    ...semilla.valores,
+  };
+
   return CAMPOS_FORMULARIO.map((definicion) => {
     const dudoso = semilla.dudosos?.[definicion.id];
     const resuelto = semilla.resueltos?.[definicion.id];
-    const valorBase = semilla.valores[definicion.id] ?? null;
+    const valorBase = valoresBase[definicion.id] ?? null;
 
     const valorModelo = dudoso?.valor !== undefined ? dudoso.valor : valorBase;
     const noLeido = dudoso?.no_leido ?? false;
@@ -91,21 +108,11 @@ function estadoDerivado(
   semilla: SemillaReporte,
   campos: readonly CampoReporte[],
 ): EstadoEscaneo {
-  if (semilla.procesado_en === null) return "recibido";
-
-  const pendientes = campos.filter(
-    (campo) => campo.estado_revision === "pendiente",
-  ).length;
-  if (pendientes > 0) {
-    const yaIntervino = campos.some(
-      (campo) =>
-        campo.estado_revision === "confirmado" ||
-        campo.estado_revision === "corregido" ||
-        campo.estado_revision === "ilegible",
-    );
-    return yaIntervino ? "en_revision" : "procesado";
-  }
-  return "completo";
+  // La regla vive en `lib/estados.ts` para que el repositorio simulado y este
+  // archivo no puedan divergir sobre cuándo un reporte está completo.
+  return derivarEstadoReporte(campos, {
+    procesado: semilla.procesado_en !== null,
+  });
 }
 
 function construirReporte(semilla: SemillaReporte): Reporte {
