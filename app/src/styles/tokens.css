@@ -1,0 +1,140 @@
+/**
+ * Responsabilidad: fuente única de verdad de la identidad visual de SIREP.
+ * Existe para que la maqueta pueda mapearse al sistema de diseño de RP-TECH sin
+ * buscar valores sueltos por los componentes. Los tokens oscuros están definidos
+ * aunque todavía no exista un interruptor visible.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Superficies de papel */
+  --paper: #f5f1e6;
+  --paper-raised: #fbf8f0;
+  --paper-sunken: #eae3d3;
+  --paper-inset: #f0eadc;
+  --line: #d6cdb9;
+  --line-strong: #b9ad95;
+
+  /* Tinta */
+  --ink: #17282c;
+  --ink-muted: #4a5a5c;
+  --ink-faint: #5c6b6b;
+
+  /* Azul petróleo: primario, foco y tinta del escaneo */
+  --petrol-50: #e7efee;
+  --petrol-100: #d2e1e1;
+  --petrol-200: #b3cfd1;
+  --petrol-600: #13545f;
+  --petrol-700: #0c4049;
+  --petrol-900: #072a31;
+
+  /* Ámbar: confianza media y campo pendiente */
+  --amber-50: #f7ecd5;
+  --amber-200: #ead3a1;
+  --amber-600: #9a640b;
+  --amber-700: #744a04;
+
+  /* Ladrillo: confianza baja, ilegible y error */
+  --brick-50: #f6e2dc;
+  --brick-200: #e8bcb0;
+  --brick-600: #a23e2c;
+  --brick-700: #7c2d1f;
+
+  /* Verde: confirmado y reporte completo */
+  --green-50: #e4ede2;
+  --green-200: #c3d8c4;
+  --green-600: #2f6a4e;
+  --green-700: #225039;
+
+  /* Mesa oscura del visor */
+  --stage: #0d2529;
+  --stage-raised: #123238;
+  --stage-line: #24464c;
+  --stage-ink: #dfe9e6;
+
+  /* Tipografía */
+  --font-ui: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
+  --font-hand: var(--font-caveat), "Caveat", cursive;
+
+  --fs-micro: 0.6875rem;
+  --fs-meta: 0.78125rem;
+  --fs-body: 0.875rem;
+  --fs-base: 0.9375rem;
+  --fs-title: 1.25rem;
+  --fs-display: clamp(1.625rem, 1.1rem + 1.5vw, 2.125rem);
+  --tracking-label: 0.08em;
+  --tracking-tight: -0.015em;
+
+  /* Radios */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+
+  /* Espaciado estructural */
+  --space-panel: 1.25rem;
+  --space-gutter: clamp(1.25rem, 3vw, 3rem);
+  --layout-max: 1560px;
+  --header-h: 3.5rem;
+
+  /* Elevación: solo la hoja y el elemento activo */
+  --shadow-sheet:
+    0 24px 48px -24px rgb(3 17 20 / 0.6), 0 2px 0 rgb(255 255 255 / 0.05) inset;
+  --shadow-lift:
+    0 1px 0 rgb(23 40 44 / 0.04), 0 10px 24px -18px rgb(23 40 44 / 0.45);
+
+  --ease-salida: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/*
+ * Tokens oscuros listos para cuando RP-TECH exponga el interruptor. Se mantiene
+ * el mismo nombre de variable para que ningún componente tenga que cambiar.
+ */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --paper: #10181a;
+  --paper-raised: #162124;
+  --paper-sunken: #0b1214;
+  --paper-inset: #131d1f;
+  --line: #2a3a3d;
+  --line-strong: #456064;
+
+  --ink: #ede7da;
+  --ink-muted: #b3beb9;
+  --ink-faint: #93a09b;
+
+  --petrol-50: #11282c;
+  --petrol-100: #153338;
+  --petrol-200: #1e454c;
+  --petrol-600: #7fc3cd;
+  --petrol-700: #a5dbe2;
+  --petrol-900: #061f24;
+
+  --amber-50: #33260e;
+  --amber-200: #5a4115;
+  --amber-600: #e0aa50;
+  --amber-700: #f0c87c;
+
+  --brick-50: #3a211b;
+  --brick-200: #5c2e24;
+  --brick-600: #e48973;
+  --brick-700: #f0af9d;
+
+  --green-50: #172b21;
+  --green-200: #25452f;
+  --green-600: #8ac9a3;
+  --green-700: #b3ddc3;
+
+  --stage: #071619;
+  --stage-raised: #0c2227;
+  --stage-line: #1b3a40;
+  --stage-ink: #e6efec;
+
+  --shadow-sheet:
+    0 24px 48px -24px rgb(0 0 0 / 0.75), 0 2px 0 rgb(255 255 255 / 0.04) inset;
+  --shadow-lift: 0 10px 24px -18px rgb(0 0 0 / 0.8);
+}
