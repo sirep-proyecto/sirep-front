@@ -129,6 +129,7 @@ export interface RepositorioReportes {
     campoId: IdCampo,
     accion: AccionRevision,
   ): Promise<Reporte>;
+  actualizarReporte?(reporte: Reporte): Promise<Reporte>;
   /** Solo para implementaciones de demostración: vuelve a los datos iniciales. */
   reiniciarDatosSimulados?(): Promise<void>;
 }

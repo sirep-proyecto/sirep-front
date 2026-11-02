@@ -26,9 +26,9 @@ function campoDe(numero: string, id: (typeof CAMPOS_FORMULARIO)[number]["id"]) {
 }
 
 describe("reportes simulados", () => {
-  it("tiene entre 8 y 12 reportes", () => {
+  it("tiene los reportes reales y simulados para la bandeja", () => {
     expect(REPORTES_SIMULADOS.length).toBeGreaterThanOrEqual(8);
-    expect(REPORTES_SIMULADOS.length).toBeLessThanOrEqual(12);
+    expect(REPORTES_SIMULADOS.length).toBeLessThanOrEqual(25);
   });
 
   it("cubre el caso N° 000845 con sus tres niveles de confianza", () => {

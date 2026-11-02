@@ -217,6 +217,21 @@ export function crearRepositorioSimulado(
       return structuredClone(actualizado);
     },
 
+    async actualizarReporte(reporteModificado: Reporte): Promise<Reporte> {
+      await esperar();
+      const indice = almacen.findIndex(
+        (r) => r.numero_reporte === reporteModificado.numero_reporte,
+      );
+      if (indice === -1) {
+        throw new ErrorRepositorio(
+          `No existe el reporte N° ${reporteModificado.numero_reporte}.`,
+          "no_encontrado",
+        );
+      }
+      almacen[indice] = structuredClone(reporteModificado);
+      return structuredClone(reporteModificado);
+    },
+
     async reiniciarDatosSimulados() {
       await esperar();
       almacen = clonar(REPORTES_SIMULADOS);

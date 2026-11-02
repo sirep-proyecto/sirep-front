@@ -593,6 +593,15 @@ const SEMILLAS: readonly SemillaReporte[] = [
   },
 ];
 
-export const REPORTES_SIMULADOS: readonly Reporte[] = SEMILLAS.map(
-  construirReporte,
+import { construirReportesReales } from "./adaptador-reales";
+
+const reportesReales = construirReportesReales();
+const numerosReales = new Set(reportesReales.map((r) => r.numero_reporte));
+const semillasSinDuplicados = SEMILLAS.filter(
+  (s) => !numerosReales.has(s.numero),
 );
+
+export const REPORTES_SIMULADOS: readonly Reporte[] = [
+  ...reportesReales,
+  ...semillasSinDuplicados.map(construirReporte),
+];

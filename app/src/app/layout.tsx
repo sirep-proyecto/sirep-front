@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Archivo, Caveat, IBM_Plex_Mono } from "next/font/google";
 
@@ -52,7 +53,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           Saltar al contenido
         </a>
         <ProveedorRepositorio>
-          <CabeceraApp />
+          <Suspense fallback={<div className="h-14 border-b border-line bg-paper" />}>
+            <CabeceraApp />
+          </Suspense>
           <main id="contenido" tabIndex={-1} className="flex-1">
             {children}
           </main>

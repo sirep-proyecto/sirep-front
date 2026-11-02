@@ -263,6 +263,9 @@ export function HojaEscaneada({
   }).filter((entrada) => entrada.region.pagina === pagina);
 
   const etiquetaPagina = pagina === 1 ? "ANVERSO" : "REVERSO";
+  const tieneImagenReal = Boolean(
+    reporte?.escaneo?.ruta_original?.startsWith("/escaneos/"),
+  );
 
   return (
     <svg
@@ -277,25 +280,38 @@ export function HojaEscaneada({
     >
       <rect width={ancho} height={alto} fill={PAPEL} />
 
-      {/* Marca de agua diagonal: está debajo de la tinta, como en el original. */}
-      <g
-        transform={`rotate(-32 ${ancho / 2} ${alto / 2})`}
-        opacity={0.055}
-        aria-hidden="true"
-      >
-        <text
-          x={ancho / 2}
-          y={alto / 2}
-          textAnchor="middle"
-          fontSize={78}
-          fontFamily={MONO}
-          fontWeight={600}
-          letterSpacing={6}
-          fill="#0c4049"
+      {tieneImagenReal && reporte?.escaneo?.ruta_original ? (
+        <image
+          href={reporte.escaneo.ruta_original}
+          x={0}
+          y={0}
+          width={ancho}
+          height={alto}
+          preserveAspectRatio="none"
+        />
+      ) : null}
+
+      {!tieneImagenReal ? (
+        /* Marca de agua diagonal: está debajo de la tinta, como en el original. */
+        <g
+          transform={`rotate(-32 ${ancho / 2} ${alto / 2})`}
+          opacity={0.055}
+          aria-hidden="true"
         >
-          {MARCA_AGUA}
-        </text>
-      </g>
+          <text
+            x={ancho / 2}
+            y={alto / 2}
+            textAnchor="middle"
+            fontSize={78}
+            fontFamily={MONO}
+            fontWeight={600}
+            letterSpacing={6}
+            fill="#0c4049"
+          >
+            {MARCA_AGUA}
+          </text>
+        </g>
+      ) : null}
 
       {/* Encabezado impreso */}
       <text
