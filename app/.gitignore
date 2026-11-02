@@ -30,6 +30,7 @@ yarn-error.log*
 
 # env files (opt-in is recommended: nunca subir secretos)
 .env*
+!.env.example
 
 # vercel
 .vercel
