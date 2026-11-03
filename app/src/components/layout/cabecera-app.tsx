@@ -9,19 +9,30 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Inbox, Map } from "lucide-react";
+import { Inbox, Map, ScanLine } from "lucide-react";
 
+import { MOSTRAR_CALIBRACION } from "@/config/entorno";
 import { USUARIO_ACTUAL } from "@/config/sesion";
 
 function Marca() {
   return (
     <span
       aria-hidden="true"
-      className="flex size-7 items-center justify-center rounded-xs bg-petrol-600 font-mono text-[0.7rem] font-semibold text-paper"
+      className="relative flex size-9 items-center justify-center rounded-lg bg-linear-to-br from-petrol-600 to-petrol-700 text-paper shadow-lift ring-1 ring-inset ring-white/20"
     >
-      SR
+      <ScanLine className="size-[1.15rem]" strokeWidth={2.25} />
     </span>
   );
+}
+
+function clasesEnlace(activo: boolean): string {
+  return [
+    "relative flex h-9 items-center gap-2 rounded-md px-3 text-meta font-medium",
+    "transition-colors duration-150 ease-[var(--ease-salida)]",
+    activo
+      ? "bg-petrol-50 text-petrol-700"
+      : "text-muted hover:bg-sunken hover:text-ink",
+  ].join(" ");
 }
 
 export function CabeceraApp() {
@@ -30,11 +41,16 @@ export function CabeceraApp() {
   const enCalibracion = ruta.startsWith("/dev/regiones");
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-raised/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-40 border-b border-line bg-raised/80 backdrop-blur-xl">
+      {/* Filo de color: identifica el producto sin ocupar altura */}
+      <div
+        aria-hidden="true"
+        className="h-0.5 bg-linear-to-r from-petrol-600 via-petrol-200 to-transparent"
+      />
       <div className="mx-auto flex h-(--header-h) max-w-(--layout-max) items-center gap-4 px-(--space-gutter)">
         <Link
           href="/"
-          className="flex items-center gap-2.5 rounded-xs text-ink"
+          className="flex items-center gap-3 rounded-md text-ink"
           aria-label="SIREP, ir a la bandeja de revisión"
         >
           <Marca />
@@ -42,8 +58,8 @@ export function CabeceraApp() {
             <span className="text-base font-semibold tracking-tight">
               SIREP
             </span>
-            <span className="text-micro uppercase tracking-label text-faint">
-              Bandeja de revisión
+            <span className="mt-1 text-micro uppercase tracking-label text-faint">
+              Digitalización de reportes
             </span>
           </span>
         </Link>
@@ -55,37 +71,27 @@ export function CabeceraApp() {
           <Link
             href="/"
             aria-current={enBandeja ? "page" : undefined}
-            className={[
-              "flex h-9 items-center gap-2 rounded-sm px-3 text-meta font-medium",
-              "transition-colors duration-150 ease-[var(--ease-salida)]",
-              enBandeja
-                ? "bg-petrol-50 text-petrol-700"
-                : "text-muted hover:bg-sunken hover:text-ink",
-            ].join(" ")}
+            className={clasesEnlace(enBandeja)}
           >
             <Inbox className="size-4" aria-hidden="true" />
             <span className="max-sm:sr-only">Bandeja</span>
           </Link>
-          <Link
-            href="/dev/regiones"
-            aria-current={enCalibracion ? "page" : undefined}
-            className={[
-              "flex h-9 items-center gap-2 rounded-sm px-3 text-meta font-medium",
-              "transition-colors duration-150 ease-[var(--ease-salida)]",
-              enCalibracion
-                ? "bg-petrol-50 text-petrol-700"
-                : "text-muted hover:bg-sunken hover:text-ink",
-            ].join(" ")}
-          >
-            <Map className="size-4" aria-hidden="true" />
-            <span className="max-sm:sr-only">Regiones</span>
-          </Link>
+          {MOSTRAR_CALIBRACION ? (
+            <Link
+              href="/dev/regiones"
+              aria-current={enCalibracion ? "page" : undefined}
+              className={clasesEnlace(enCalibracion)}
+            >
+              <Map className="size-4" aria-hidden="true" />
+              <span className="max-sm:sr-only">Regiones</span>
+            </Link>
+          ) : null}
         </nav>
 
-        <div className="flex items-center gap-2 border-l border-line pl-3">
+        <div className="flex items-center gap-2.5 border-l border-line pl-4">
           <span
             aria-hidden="true"
-            className="flex size-7 items-center justify-center rounded-full bg-sunken font-mono text-micro font-semibold text-muted"
+            className="flex size-8 items-center justify-center rounded-full bg-petrol-50 font-mono text-micro font-semibold text-petrol-700 ring-1 ring-inset ring-petrol-200"
           >
             {USUARIO_ACTUAL.iniciales}
           </span>
@@ -93,7 +99,7 @@ export function CabeceraApp() {
             <span className="text-meta font-medium text-ink">
               {USUARIO_ACTUAL.nombre}
             </span>
-            <span className="text-micro uppercase tracking-label text-faint">
+            <span className="mt-1 text-micro uppercase tracking-label text-faint">
               {USUARIO_ACTUAL.rol}
             </span>
           </span>

@@ -24,7 +24,7 @@ function crearCampo(
   noLeido = false,
 ): CampoReporte {
   return {
-    id: "cliente",
+    id: "empresa",
     valor_modelo: "valor",
     confianza,
     no_leido: noLeido,
@@ -60,7 +60,8 @@ function crearReporte(
     escaneo: {
       id: `esc-${numero}`,
       numero_reporte: numero,
-      ruta_original: `/escaneos/${numero}.pdf`,
+      ruta_original: `empresa/${numero}_orig.pdf`,
+      paginas_urls: [],
       paginas: 2,
       enviado_por: "Secretaría",
       canal: "telegram",

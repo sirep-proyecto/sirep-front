@@ -73,22 +73,12 @@ export function useBandeja(): UsoBandeja {
       .listarReportes()
       .then((reportes) => {
         if (!vivo) return;
-        // Demo por URL (plan §3): `?demo=error` y `?demo=vacio`. Se resuelve
-        // dentro del callback porque `window` no existe al prerender y porque
-        // el cuerpo del efecto no debe encadenar renders con setState
-        // síncrono; un parámetro de demostración no necesita reactividad.
-        const demo = new URLSearchParams(window.location.search).get("demo");
-
-        if (demo === "error") {
-          setEstadoCarga("error");
-          return;
-        }
-        setReportesArchivo(demo === "vacio" ? [] : reportes);
+        setReportesArchivo(reportes);
         setEstadoCarga("listo");
       })
       .catch(() => {
-        // El prototipo no distingue tipos de error: cualquier fallo cae al
-        // mismo estado y con el mismo reintento, sin inventar diagnósticos.
+        // Cualquier fallo de carga cae al mismo estado y con el mismo
+        // reintento, sin inventar diagnósticos.
         if (!vivo) return;
         setEstadoCarga("error");
       });

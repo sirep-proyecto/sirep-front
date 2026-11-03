@@ -1,35 +1,26 @@
 /**
- * Responsabilidad: inventario provisional de los campos del reporte técnico y
- * de las secciones del formulario.
- * Existe como fuente de verdad de los identificadores: el mapa de regiones, los
- * datos simulados y la vista de corrección se tipan contra esta lista. Cuando el
- * equipo cierre el inventario real, este archivo y su mapa se reemplazan.
- *
- * TODO(inventario): validar esta lista contra los 5 reportes escaneados y la
- * tabla de comparación con RP-TECH antes de la reunión con Adrián.
+ * Responsabilidad: identificadores de los campos del reporte técnico y de las
+ * secciones del formulario.
+ * Existe como fuente de verdad de los identificadores: el mapa de regiones y la
+ * vista de corrección se tipan contra esta lista. Son exactamente las claves que
+ * el backend le pide al modelo (`sirep-back/src/escaneos/campos-formulario.ts`):
+ * si una cambia, tiene que cambiar en los dos lados.
  */
 
 export const IDS_CAMPOS = [
-  "numero_reporte",
-  "fecha",
-  "cliente",
-  "equipo",
-  "marca",
-  "modelo",
-  "numero_serie",
   "tecnico",
-  "falla_reportada",
-  "diagnostico",
+  "empresa",
+  "fecha",
+  "direccion",
+  "equipo",
+  "motivo",
+  "estado_del_equipo",
   "procedimiento",
-  "repuesto_1_codigo",
-  "repuesto_1_descripcion",
-  "repuesto_1_cantidad",
-  "repuesto_2_codigo",
-  "repuesto_2_descripcion",
-  "repuesto_2_cantidad",
-  "observaciones",
-  "firma_cliente",
-  "sello",
+  "conclusion",
+  "recomendaciones",
+  "codigo_repuesto",
+  "hora_llegada",
+  "hora_salida",
 ] as const;
 
 export type IdCampo = (typeof IDS_CAMPOS)[number];

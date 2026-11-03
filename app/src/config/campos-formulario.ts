@@ -1,11 +1,14 @@
 /**
- * Responsabilidad: inventario provisional del formulario físico, agrupado por
- * secciones, y accesos indexados para el resto de la aplicación.
- * Existe como el único archivo que hay que reemplazar cuando el equipo cierre el
- * inventario real con los escaneos. Nada de esto vive dentro de un componente.
+ * Responsabilidad: inventario de los campos del formulario físico de GO Service
+ * Latam, agrupado por secciones, y accesos indexados para el resto de la app.
+ * Existe como el único archivo que hay que tocar cuando el equipo agregue o
+ * renombre un campo: nada de esto vive dentro de un componente.
  *
- * TODO(inventario): los campos de repuestos y la firma son provisionales; el
- * inventario definitivo depende de la tabla de comparación con RP-TECH.
+ * Debe coincidir con `sirep-back/src/escaneos/campos-formulario.ts`.
+ *
+ * TODO(inventario): faltan los campos que el formulario trae y el backend aún no
+ * extrae (teléfono, contacto, último mantenimiento, cabezales, firmas). Se
+ * agregan junto con la tabla de comparación acordada con RP-TECH.
  */
 
 import type {
@@ -19,39 +22,47 @@ export const SECCIONES_FORMULARIO: readonly SeccionFormulario[] = [
   {
     id: "identificacion",
     titulo: "Identificación",
-    descripcion: "Datos impresos y de cabecera del talonario.",
+    descripcion: "Quién atendió, a quién y cuándo.",
   },
   {
     id: "equipo",
-    titulo: "Equipo",
-    descripcion: "Identifica el equipo intervenido.",
+    titulo: "Equipo y motivo",
+    descripcion: "Equipo intervenido, motivo de la visita y su estado.",
   },
   {
     id: "servicio",
     titulo: "Servicio realizado",
-    descripcion: "Falla, diagnóstico y procedimiento.",
+    descripcion: "Procedimiento, conclusión y recomendaciones.",
   },
   {
     id: "repuestos",
     titulo: "Repuestos",
-    descripcion: "Tabla de códigos, descripciones y cantidades.",
+    descripcion: "Código de los repuestos requeridos.",
   },
   {
     id: "cierre",
-    titulo: "Cierre",
-    descripcion: "Observaciones, conformidad y sello.",
+    titulo: "Visita al cliente",
+    descripcion: "Horas de llegada y de salida del técnico.",
   },
 ] as const;
 
 export const CAMPOS_FORMULARIO: readonly DefinicionCampo[] = [
   {
-    id: "numero_reporte",
-    etiqueta: "N° de reporte",
-    etiqueta_formulario: "Reporte N°",
+    id: "tecnico",
+    etiqueta: "Técnico",
+    etiqueta_formulario: "Técnico",
     seccion: "identificacion",
-    tipo: "codigo",
-    mono: true,
-    ayuda: "Número impreso del talonario; es la clave de duplicados.",
+    tipo: "texto",
+    mono: false,
+  },
+  {
+    id: "empresa",
+    etiqueta: "Empresa",
+    etiqueta_formulario: "Empresa",
+    seccion: "identificacion",
+    tipo: "texto",
+    mono: false,
+    ayuda: "Cliente o empresa atendida.",
   },
   {
     id: "fecha",
@@ -60,12 +71,12 @@ export const CAMPOS_FORMULARIO: readonly DefinicionCampo[] = [
     seccion: "identificacion",
     tipo: "fecha",
     mono: true,
-    ayuda: "Formato día/mes/año.",
+    ayuda: "Formato día/mes/año, tal como está escrito en el papel.",
   },
   {
-    id: "cliente",
-    etiqueta: "Cliente",
-    etiqueta_formulario: "Cliente",
+    id: "direccion",
+    etiqueta: "Dirección",
+    etiqueta_formulario: "Dirección",
     seccion: "identificacion",
     tipo: "texto",
     mono: false,
@@ -77,54 +88,24 @@ export const CAMPOS_FORMULARIO: readonly DefinicionCampo[] = [
     seccion: "equipo",
     tipo: "texto",
     mono: false,
+    ayuda: "Marca y modelo del equipo intervenido.",
   },
   {
-    id: "marca",
-    etiqueta: "Marca",
-    etiqueta_formulario: "Marca",
+    id: "motivo",
+    etiqueta: "Motivo",
+    etiqueta_formulario: "Motivo",
     seccion: "equipo",
     tipo: "texto",
     mono: false,
   },
   {
-    id: "modelo",
-    etiqueta: "Modelo",
-    etiqueta_formulario: "Modelo",
+    id: "estado_del_equipo",
+    etiqueta: "Estado del equipo",
+    etiqueta_formulario: "Estado del equipo",
     seccion: "equipo",
     tipo: "texto",
     mono: false,
-  },
-  {
-    id: "numero_serie",
-    etiqueta: "N° de serie",
-    etiqueta_formulario: "N° de serie",
-    seccion: "equipo",
-    tipo: "codigo",
-    mono: true,
-  },
-  {
-    id: "tecnico",
-    etiqueta: "Técnico",
-    etiqueta_formulario: "Técnico",
-    seccion: "servicio",
-    tipo: "texto",
-    mono: false,
-  },
-  {
-    id: "falla_reportada",
-    etiqueta: "Falla reportada",
-    etiqueta_formulario: "Falla reportada",
-    seccion: "servicio",
-    tipo: "multilinea",
-    mono: false,
-  },
-  {
-    id: "diagnostico",
-    etiqueta: "Diagnóstico",
-    etiqueta_formulario: "Diagnóstico",
-    seccion: "servicio",
-    tipo: "multilinea",
-    mono: false,
+    ayuda: "Casilla marcada: operativo o inoperativo.",
   },
   {
     id: "procedimiento",
@@ -135,78 +116,44 @@ export const CAMPOS_FORMULARIO: readonly DefinicionCampo[] = [
     mono: false,
   },
   {
-    id: "repuesto_1_codigo",
-    etiqueta: "Código del repuesto 1",
-    etiqueta_formulario: "Código",
-    seccion: "repuestos",
-    tipo: "codigo",
-    mono: true,
-  },
-  {
-    id: "repuesto_1_descripcion",
-    etiqueta: "Descripción del repuesto 1",
-    etiqueta_formulario: "Descripción",
-    seccion: "repuestos",
-    tipo: "texto",
-    mono: false,
-  },
-  {
-    id: "repuesto_1_cantidad",
-    etiqueta: "Cantidad del repuesto 1",
-    etiqueta_formulario: "Cant.",
-    seccion: "repuestos",
-    tipo: "numero",
-    mono: true,
-  },
-  {
-    id: "repuesto_2_codigo",
-    etiqueta: "Código del repuesto 2",
-    etiqueta_formulario: "Código",
-    seccion: "repuestos",
-    tipo: "codigo",
-    mono: true,
-  },
-  {
-    id: "repuesto_2_descripcion",
-    etiqueta: "Descripción del repuesto 2",
-    etiqueta_formulario: "Descripción",
-    seccion: "repuestos",
-    tipo: "texto",
-    mono: false,
-  },
-  {
-    id: "repuesto_2_cantidad",
-    etiqueta: "Cantidad del repuesto 2",
-    etiqueta_formulario: "Cant.",
-    seccion: "repuestos",
-    tipo: "numero",
-    mono: true,
-  },
-  {
-    id: "observaciones",
-    etiqueta: "Observaciones",
-    etiqueta_formulario: "Observaciones",
-    seccion: "cierre",
+    id: "conclusion",
+    etiqueta: "Conclusión",
+    etiqueta_formulario: "Conclusión",
+    seccion: "servicio",
     tipo: "multilinea",
     mono: false,
   },
   {
-    id: "firma_cliente",
-    etiqueta: "Firma del cliente",
-    etiqueta_formulario: "Firma del cliente",
-    seccion: "cierre",
-    tipo: "firma",
+    id: "recomendaciones",
+    etiqueta: "Recomendaciones",
+    etiqueta_formulario: "Recomendaciones",
+    seccion: "servicio",
+    tipo: "multilinea",
     mono: false,
-    ayuda: "Se registra la presencia de la firma, no su contenido.",
   },
   {
-    id: "sello",
-    etiqueta: "Sello",
-    etiqueta_formulario: "Sello",
+    id: "codigo_repuesto",
+    etiqueta: "Código de repuesto",
+    etiqueta_formulario: "Código",
+    seccion: "repuestos",
+    tipo: "codigo",
+    mono: true,
+  },
+  {
+    id: "hora_llegada",
+    etiqueta: "Hora de llegada",
+    etiqueta_formulario: "Hora de llegada cliente",
     seccion: "cierre",
-    tipo: "sello",
-    mono: false,
-    ayuda: "Sello de recepción del taller o de la empresa.",
+    tipo: "codigo",
+    mono: true,
+  },
+  {
+    id: "hora_salida",
+    etiqueta: "Hora de salida",
+    etiqueta_formulario: "Hora de salida cliente",
+    seccion: "cierre",
+    tipo: "codigo",
+    mono: true,
   },
 ] as const;
 

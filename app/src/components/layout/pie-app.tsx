@@ -1,20 +1,16 @@
 /**
- * Responsabilidad: pie global con el aviso de que el prototipo corre sobre
- * datos simulados.
- * Existe para que nadie confunda este entorno con producción mientras se
- * muestra a cliente o se capacita al taller.
+ * Responsabilidad: pie global de la aplicación.
+ * Existe para recordar que los escaneos mostrados contienen datos reales de
+ * clientes y que la sesión actual es provisional.
  */
 
 export function PieApp() {
   return (
-    <footer className="border-t border-line bg-raised">
+    <footer className="border-t border-line bg-raised/60">
       <div className="mx-auto flex max-w-(--layout-max) flex-col gap-1 px-(--space-gutter) py-4 text-micro text-faint sm:flex-row sm:items-center sm:justify-between">
-        <p>
-          SIREP · prototipo de bandeja de revisión con datos simulados · GO
-          Service Latam
-        </p>
+        <p>SIREP · Digitalización de reportes técnicos · GO Service Latam</p>
         <p className="uppercase tracking-label">
-          Ningún escaneo de este entorno contiene datos reales de clientes
+          Los escaneos contienen datos de clientes: no los compartas fuera del equipo
         </p>
       </div>
     </footer>

@@ -3,7 +3,7 @@
  * Usa `fetch` nativo y toma por defecto `process.env.NEXT_PUBLIC_API_URL`.
  */
 
-const DEFAULT_BASE_URL = 'http://localhost:3001';
+const DEFAULT_BASE_URL = 'http://localhost:3000';
 const DEFAULT_TIMEOUT_MS = 8000;
 
 export const API_BASE_URL = (

@@ -22,7 +22,7 @@ function crearCampo(
   opciones: { confianza?: Confianza | null; noLeido?: boolean } = {},
 ): CampoReporte {
   return {
-    id: "cliente",
+    id: "empresa",
     valor_modelo: "Ferretería San Martín",
     confianza: opciones.confianza ?? "media",
     no_leido: opciones.noLeido ?? false,

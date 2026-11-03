@@ -3,8 +3,8 @@
  * campos.
  * Existe porque esa regla define el trabajo real del taller: el estado no se
  * asigna a mano, se deduce de la evidencia. Compartida entre los datos
- * simulados y el repositorio para que una corrección en producción no pueda
- * contradecir a la bandeja.
+ * el frontend y el backend (`sirep-back/src/reportes/reportes.mapper.ts`) para
+ * que una corrección guardada no pueda contradecir a la bandeja.
  */
 
 import type {

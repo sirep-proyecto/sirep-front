@@ -2,7 +2,7 @@
  * Responsabilidad: tabla densa de escritorio con un reporte por fila y la
  * fila entera como enlace accesible al detalle.
  * Existe porque en pantalla grande el técnico compara reportes uno debajo del
- * otro: separadores de 1 px, cabecera en papel elevado y sin sombras; el
+ * otro: separadores de 1 px, cabecera tenue sobre una tarjeta con borde; el
  * enlace extendido hace que cualquier punto de la fila abra el reporte sin
  * apuntar a un texto chico.
  */
@@ -25,7 +25,7 @@ interface TablaReportesProps {
 const CLASE_CELDA = "border-b border-line px-4 py-2.5";
 
 const CLASE_CABECERA =
-  "border-b border-line-strong px-4 py-2.5 text-left text-micro font-medium uppercase tracking-label text-muted";
+  "border-b border-line px-4 py-3 text-left text-micro font-medium uppercase tracking-label text-muted";
 
 function FilaReporte({ reporte }: { reporte: Reporte }) {
   const {
@@ -40,7 +40,7 @@ function FilaReporte({ reporte }: { reporte: Reporte }) {
   } = reporte;
 
   return (
-    <tr className="relative transition-colors duration-150 ease-[var(--ease-salida)] hover:bg-raised/70">
+    <tr className="relative transition-colors duration-150 ease-[var(--ease-salida)] hover:bg-petrol-50/60">
       <td className={CLASE_CELDA}>
         {/*
          * El `::after` extendido usa la fila como bloque contenedor (por eso
@@ -83,14 +83,15 @@ function FilaReporte({ reporte }: { reporte: Reporte }) {
 
 export function TablaReportes({ reportes }: TablaReportesProps) {
   return (
-    <div className="hidden overflow-x-auto scroll-fino lg:block">
+    <div className="hidden overflow-hidden rounded-lg border border-line bg-raised shadow-lift lg:block">
+      <div className="overflow-x-auto scroll-fino">
       <table className="w-full border-collapse">
         <caption className="sr-only">
           Reportes de la bandeja: número, cliente, equipo, técnico, estado,
           origen, dudosos pendientes y fecha del reporte.
         </caption>
         <thead>
-          <tr className="bg-raised">
+          <tr className="bg-sunken/70">
             <th scope="col" className={CLASE_CABECERA}>
               N° de reporte
             </th>
@@ -123,6 +124,7 @@ export function TablaReportes({ reportes }: TablaReportesProps) {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

@@ -64,7 +64,8 @@ function crearReporte(
     escaneo: {
       id: `esc-${numero}`,
       numero_reporte: numero,
-      ruta_original: `/escaneos/${numero}.pdf`,
+      ruta_original: `empresa/${numero}_orig.pdf`,
+      paginas_urls: [],
       paginas: 2,
       enviado_por: "Secretaría",
       canal: "telegram",
@@ -149,7 +150,7 @@ describe("ordenarReportes", () => {
     crearReporte(`00090${cantidad}`, {
       estado,
       campos: Array.from({ length: cantidad }, () =>
-        crearCampo("cliente", "pendiente"),
+        crearCampo("empresa", "pendiente"),
       ),
     });
 

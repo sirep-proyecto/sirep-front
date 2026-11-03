@@ -26,11 +26,15 @@ export default function PaginaBandeja() {
 
   return (
     <div className="mx-auto w-full max-w-(--layout-max) px-(--space-gutter) pb-16">
-      <header className="max-w-2xl pt-8 pb-6">
-        <h1 className="text-title font-semibold tracking-tight text-ink">
+      <header className="max-w-2xl pt-10 pb-7">
+        <p className="mb-2 inline-flex items-center gap-2 text-micro font-medium uppercase tracking-label text-petrol-700">
+          <span aria-hidden="true" className="size-1.5 rounded-full bg-petrol-600" />
+          Revisión técnica
+        </p>
+        <h1 className="text-display font-semibold tracking-tight text-ink">
           Bandeja de revisión
         </h1>
-        <p className="mt-1.5 text-meta text-muted">
+        <p className="mt-2 text-base text-muted">
           Reportes escaneados: el modelo lee el documento y solo lo dudoso
           espera tu revisión, junto al recorte del escaneo.
         </p>

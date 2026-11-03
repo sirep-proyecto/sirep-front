@@ -1,7 +1,8 @@
 /**
  * Responsabilidad: página de servidor para la ruta `/reportes/[numero]`.
- * Desempaqueta `params.numero` y envuelve la vista en Suspense con el esqueleto
- * de carga, garantizando un render sin bloqueos de prerendering en Next.js.
+ * Los parámetros de la ruta se leen dentro de un componente envuelto en
+ * Suspense: con `cacheComponents` activo, leerlos fuera impide prerenderizar la
+ * página y el build de producción falla.
  */
 
 import { Suspense } from "react";
@@ -12,12 +13,15 @@ interface PaginaReporteProps {
   params: Promise<{ numero: string }>;
 }
 
-export default async function PaginaReporte({ params }: PaginaReporteProps) {
+async function ContenidoReporte({ params }: PaginaReporteProps) {
   const { numero } = await params;
+  return <VistaCorreccion numero={numero} />;
+}
 
+export default function PaginaReporte({ params }: PaginaReporteProps) {
   return (
     <Suspense fallback={<CargandoRevision />}>
-      <VistaCorreccion numero={numero} />
+      <ContenidoReporte params={params} />
     </Suspense>
   );
 }

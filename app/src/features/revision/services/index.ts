@@ -1,20 +1,17 @@
 /**
  * Responsabilidad: punto único donde se elige la implementación del
  * repositorio de reportes.
- * Existe para que migrar a Supabase sea un cambio en este archivo: se agrega
- * `repositorio-supabase.ts` cumpliendo `RepositorioReportes` y se cambia la
- * fábrica. Los componentes siguen recibiendo el mismo objeto por contexto.
- *
- * TODO(supabase): implementar `RepositorioReportes` contra la tabla de
- * reportes y reemplazar la fábrica de acá.
+ * Existe para que los componentes reciban siempre el mismo objeto por contexto y
+ * que cambiar de origen de datos (pruebas, otro backend) sea un cambio en este
+ * archivo.
  */
 
 import type { RepositorioReportes } from "@/features/revision/types/dominio";
 
-import { crearRepositorioSimulado } from "./repositorio-simulado";
+import { crearRepositorioApi } from "./repositorio-api";
 
 export { ErrorRepositorio } from "./errores";
 
 export function crearRepositorio(): RepositorioReportes {
-  return crearRepositorioSimulado();
+  return crearRepositorioApi();
 }

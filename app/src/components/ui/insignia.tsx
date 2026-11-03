@@ -12,7 +12,7 @@ import { twMerge } from "tailwind-merge";
 
 const variantes = cva(
   [
-    "inline-flex items-center gap-1.5 whitespace-nowrap border",
+    "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border font-medium",
     "transition-colors duration-150 ease-[var(--ease-salida)]",
   ],
   {
@@ -29,8 +29,8 @@ const variantes = cva(
         false: "",
       },
       tamano: {
-        micro: "px-1.5 py-0.5 text-micro uppercase tracking-label",
-        normal: "px-2 py-0.5 text-meta",
+        micro: "px-2 py-0.5 text-micro uppercase tracking-label",
+        normal: "px-2.5 py-0.5 text-meta",
       },
     },
     compoundVariants: [

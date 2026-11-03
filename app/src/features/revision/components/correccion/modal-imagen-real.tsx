@@ -8,13 +8,14 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, Maximize2, Minimize2, RotateCw, X, ZoomIn, ZoomOut } from "lucide-react";
+import { Eye, RotateCw, X, ZoomIn, ZoomOut } from "lucide-react";
 
 import { Boton } from "@/components/ui/boton";
 
 interface ModalImagenRealProps {
   abierto: boolean;
-  rutaImagen: string;
+  /** Enlace firmado a la imagen de la página; `null` si no se pudo obtener. */
+  rutaImagen: string | null;
   numeroReporte: string;
   cliente: string;
   onCerrar: () => void;
@@ -124,13 +125,20 @@ export function ModalImagenReal({
             transformOrigin: "center center",
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={rutaImagen}
-            alt={`Escaneo original de reporte N° ${numeroReporte}`}
-            className="max-h-[85vh] w-auto max-w-none rounded-xs object-contain select-none shadow-md"
-            draggable={false}
-          />
+          {rutaImagen ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={rutaImagen}
+              alt={`Escaneo original de reporte N° ${numeroReporte}`}
+              className="max-h-[85vh] w-auto max-w-none rounded-xs object-contain select-none shadow-md"
+              draggable={false}
+            />
+          ) : (
+            <p className="px-10 py-16 text-body text-muted">
+              No se pudo cargar la imagen del escaneo. Recarga la página para
+              obtener un enlace nuevo.
+            </p>
+          )}
         </div>
       </main>
     </div>

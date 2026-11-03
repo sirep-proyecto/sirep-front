@@ -1,9 +1,9 @@
 /**
  * Responsabilidad: contrato del dominio de SIREP tal como lo consumen la bandeja
  * y la vista de corrección.
- * Existe para que la implementación simulada y una futura implementación con
- * Supabase devuelvan exactamente la misma forma, sin que los componentes sepan
- * de dónde salen los datos.
+ * Existe para que los componentes no sepan de dónde salen los datos: hoy los
+ * entrega la API de SIREP (`repositorio-api.ts`), que devuelve exactamente esta
+ * forma desde el backend (`sirep-back/src/reportes`).
  */
 
 import type { DefinicionCampo, IdCampo, IdSeccion } from "./campos";
@@ -43,9 +43,11 @@ export interface CampoReporte {
 export interface Escaneo {
   id: string;
   numero_reporte: string;
-  /** Solo descriptivo en el prototipo: el SVG se genera en el cliente. */
+  /** Ruta del original en Storage (solo informativa; el navegador usa `paginas_urls`). */
   ruta_original: string;
   paginas: number;
+  /** Enlaces temporales y firmados a la imagen de cada página, en orden. Vacío si no se pudieron firmar. */
+  paginas_urls: string[];
   enviado_por: string;
   canal: "telegram";
   estado: EstadoEscaneo;
@@ -121,7 +123,7 @@ export type CodigoErrorRepositorio =
   | "conflicto";
 
 export interface RepositorioReportes {
-  /** Devuelve todos los reportes del archivo. El prototipo filtra en memoria. */
+  /** Devuelve todos los reportes del archivo. La bandeja filtra y ordena en memoria. */
   listarReportes(): Promise<Reporte[]>;
   obtenerReporte(numero: string): Promise<Reporte | null>;
   revisarCampo(
@@ -129,9 +131,6 @@ export interface RepositorioReportes {
     campoId: IdCampo,
     accion: AccionRevision,
   ): Promise<Reporte>;
-  actualizarReporte?(reporte: Reporte): Promise<Reporte>;
-  /** Solo para implementaciones de demostración: vuelve a los datos iniciales. */
-  reiniciarDatosSimulados?(): Promise<void>;
 }
 
 export type { IdCampo, IdSeccion };

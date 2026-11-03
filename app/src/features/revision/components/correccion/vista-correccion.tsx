@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   AlertCircle,
@@ -14,7 +14,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
-  FileCheck,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
@@ -33,7 +32,6 @@ import { ProgresoRevision } from "@/features/revision/components/correccion/prog
 import { HojaEscaneada } from "@/features/revision/components/escaneo/hoja-escaneada";
 import { RecorteEscaneo } from "@/features/revision/components/escaneo/recorte";
 import { useRevisionReporte } from "@/features/revision/hooks/use-revision-reporte";
-import { useRepositorio } from "@/features/revision/providers/repositorio-contexto";
 import type { NumeroPagina } from "@/features/revision/types/regiones";
 
 interface VistaCorreccionProps {
@@ -42,41 +40,11 @@ interface VistaCorreccionProps {
 
 export function VistaCorreccion({ numero }: VistaCorreccionProps) {
   const revision = useRevisionReporte(numero);
-  const repositorio = useRepositorio();
 
-  const [nombreReporte, setNombreReporte] = useState("");
   const [modoEdicion, setModoEdicion] = useState(false);
   const [modalOriginal, setModalOriginal] = useState(false);
   const [paginaEscaneo, setPaginaEscaneo] = useState<NumeroPagina>(1);
   const [zoomNivel, setZoomNivel] = useState(1);
-  const [guardando, setGuardando] = useState(false);
-  const [mensajeGuardado, setMensajeGuardado] = useState<string | null>(null);
-
-  // Snapshot para detectar cambios sucios (dirty) y poder revertir
-  const [snapshotReporte, setSnapshotReporte] = useState<string | null>(null);
-  const [tieneCambios, setTieneCambios] = useState(false);
-
-  // Inicializar nombre y snapshot cuando el reporte carga
-  useEffect(() => {
-    if (revision.reporte && !snapshotReporte) {
-      const serializado = JSON.stringify(revision.reporte.campos);
-      setSnapshotReporte(serializado);
-      setNombreReporte(
-        `Reporte N° ${revision.reporte.numero_reporte} - ${revision.reporte.cliente}`,
-      );
-    }
-  }, [revision.reporte, snapshotReporte]);
-
-  // Sincronizar cambios en campos para habilitar/deshabilitar Guardar
-  useEffect(() => {
-    if (revision.reporte && snapshotReporte) {
-      const actual = JSON.stringify(revision.reporte.campos);
-      const nombreCambiado =
-        nombreReporte !==
-        `Reporte N° ${revision.reporte.numero_reporte} - ${revision.reporte.cliente}`;
-      setTieneCambios(actual !== snapshotReporte || nombreCambiado);
-    }
-  }, [revision.reporte, snapshotReporte, nombreReporte]);
 
   if (revision.estado === "cargando") return <CargandoRevision />;
   if (revision.estado === "no_encontrado")
@@ -92,68 +60,24 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
 
   const reporte = revision.reporte;
 
-  // Acciones de la barra superior
-  const handleGuardar = async () => {
-    if (!tieneCambios || guardando) return;
-    setGuardando(true);
-    try {
-      if (repositorio.actualizarReporte) {
-        await repositorio.actualizarReporte(reporte);
-      }
-      setSnapshotReporte(JSON.stringify(reporte.campos));
-      setTieneCambios(false);
-      setMensajeGuardado("Cambios guardados con éxito.");
-      setTimeout(() => setMensajeGuardado(null), 3000);
-    } catch {
-      setMensajeGuardado("Ocurrió un error al guardar los cambios.");
-    } finally {
-      setGuardando(false);
-    }
-  };
-
-  const handleRevertir = () => {
-    if (!snapshotReporte) return;
-    try {
-      const camposPrevios = JSON.parse(snapshotReporte);
-      for (const campo of camposPrevios) {
-        if (campo.valor_corregido) {
-          void revision.corregir(campo.id, campo.valor_corregido);
-        } else if (campo.estado_revision === "confirmado") {
-          void revision.confirmar(campo.id);
-        }
-      }
-      setNombreReporte(
-        `Reporte N° ${reporte.numero_reporte} - ${reporte.cliente}`,
-      );
-      setTieneCambios(false);
-      setMensajeGuardado("Se revirtieron todos los cambios al estado previo.");
-      setTimeout(() => setMensajeGuardado(null), 3000);
-    } catch {
-      revision.recargar();
-    }
-  };
+  // Cada revisión se guarda en el servidor al instante (ver repositorio-api),
+  // así que no hay "guardar" ni "revertir": deshacer es reabrir el campo.
+  const totalPaginas = Math.max(
+    reporte.mapa.paginas,
+    reporte.escaneo.paginas_urls.length,
+    reporte.escaneo.paginas,
+    1,
+  );
 
   const handleDescargarPDF = () => {
     const anterior = document.title;
-    document.title = nombreReporte || `Reporte_${reporte.numero_reporte}`;
+    document.title = `Reporte_${reporte.numero_reporte}`;
     window.print();
     document.title = anterior;
   };
 
   return (
     <div className="mx-auto flex w-full max-w-(--layout-max) flex-col gap-5 px-(--space-gutter) pb-16 pt-4">
-      {/* Mensaje de confirmación / guardado */}
-      {mensajeGuardado ? (
-        <aside
-          role="status"
-          aria-live="polite"
-          className="flex items-center gap-2 rounded-xs border border-green-200 bg-green-50 px-3 py-2 text-meta text-green-800 animate-in fade-in"
-        >
-          <FileCheck className="size-4 shrink-0 text-green-600" />
-          <span>{mensajeGuardado}</span>
-        </aside>
-      ) : null}
-
       {/* Barra de navegación rápida a la bandeja */}
       <nav aria-label="Navegación secundaria">
         <Link
@@ -165,19 +89,12 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
         </Link>
       </nav>
 
-      {/* Barra de herramientas superior CRUD + Google Sheets Title */}
+      {/* Barra de herramientas superior */}
       <BarraAccionesReporte
-        nombreReporte={nombreReporte}
-        onCambioNombre={(nuevo) => {
-          setNombreReporte(nuevo);
-          setTieneCambios(true);
-        }}
+        numeroReporte={reporte.numero_reporte}
+        cliente={reporte.cliente}
         modoEdicion={modoEdicion}
         onAlternarEdicion={() => setModoEdicion((prev) => !prev)}
-        tieneCambios={tieneCambios}
-        guardando={guardando}
-        onGuardar={handleGuardar}
-        onRevertir={handleRevertir}
         onDescargarPDF={handleDescargarPDF}
         onVerImagenReal={() => setModalOriginal(true)}
       />
@@ -192,7 +109,7 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
             <AlertCircle className="size-4 shrink-0 text-amber-700" />
             <span>
               <strong>Campos en modo lectura protegida:</strong> Los campos
-              tienen cursor de edición prohibido. Hacé clic en{" "}
+              están protegidos. Haz clic en{" "}
               <strong>&ldquo;Editar&rdquo;</strong> arriba para habilitar
               cambios manuales.
             </span>
@@ -236,7 +153,7 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
                 Visor de Escaneo
               </span>
               <span className="rounded-xs bg-sunken px-1.5 py-0.5 font-mono text-micro text-ink">
-                Pág. {paginaEscaneo} de {reporte.mapa.paginas}
+                Pág. {paginaEscaneo} de {totalPaginas}
               </span>
             </div>
 
@@ -279,11 +196,11 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
                 </button>
               </div>
 
-              {reporte.mapa.paginas > 1 ? (
+              {totalPaginas > 1 ? (
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
-                    onClick={() => setPaginaEscaneo(1)}
+                    onClick={() => setPaginaEscaneo((p) => Math.max(1, p - 1))}
                     disabled={paginaEscaneo === 1}
                     className="p-1 text-muted disabled:opacity-30 hover:text-ink"
                     title="Página anterior"
@@ -293,8 +210,10 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setPaginaEscaneo(2)}
-                    disabled={paginaEscaneo === 2}
+                    onClick={() =>
+                      setPaginaEscaneo((p) => Math.min(totalPaginas, p + 1))
+                    }
+                    disabled={paginaEscaneo === totalPaginas}
                     className="p-1 text-muted disabled:opacity-30 hover:text-ink"
                     title="Página siguiente"
                     aria-label="Página siguiente"
@@ -388,7 +307,7 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
       {/* Modal de Imagen Real (archivo físico escaneado) */}
       <ModalImagenReal
         abierto={modalOriginal}
-        rutaImagen={reporte.escaneo.ruta_original}
+        rutaImagen={reporte.escaneo.paginas_urls[paginaEscaneo - 1] ?? null}
         numeroReporte={reporte.numero_reporte}
         cliente={reporte.cliente}
         onCerrar={() => setModalOriginal(false)}

@@ -11,7 +11,6 @@
 @theme inline {
   --font-sans: var(--font-ui);
   --font-mono: var(--font-mono);
-  --font-hand: var(--font-hand);
 
   --color-paper: var(--paper);
   --color-raised: var(--paper-raised);
@@ -92,9 +91,19 @@
   body {
     min-height: 100dvh;
     background-color: var(--paper);
-    /* Retícula de papel: apenas perceptible, evita el aspecto de lienzo vacío. */
-    background-image: radial-gradient(var(--line) 0.5px, transparent 0.5px);
-    background-size: 26px 26px;
+    /* Resplandor índigo muy tenue arriba: da profundidad sin competir con los datos. */
+    background-image:
+      radial-gradient(
+        1100px 480px at 88% -12%,
+        color-mix(in srgb, var(--petrol-600) 10%, transparent),
+        transparent 65%
+      ),
+      radial-gradient(
+        900px 420px at -8% -6%,
+        color-mix(in srgb, var(--petrol-600) 6%, transparent),
+        transparent 60%
+      );
+    background-repeat: no-repeat;
     color: var(--ink);
     font-family: var(--font-ui);
     font-size: var(--fs-body);
@@ -114,7 +123,7 @@
 
   /*
    * El foco se dibuja por fuera para que nunca quede tapado por un borde de la
-   * tabla o del panel; sobre la mesa oscura se invierte el tono.
+   * tabla o del panel; sobre el visor oscuro se invierte el tono.
    */
   :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
     outline: 2px solid var(--petrol-600);
@@ -158,7 +167,7 @@
     transform: translateY(0);
   }
 
-  /* Scroll fino consistente en la mesa del escaneo y en el panel de campos. */
+  /* Scroll fino consistente en el visor del escaneo y en el panel de campos. */
   .scroll-fino {
     scrollbar-width: thin;
     scrollbar-color: var(--line-strong) transparent;

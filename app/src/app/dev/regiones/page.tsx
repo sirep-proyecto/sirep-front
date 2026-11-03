@@ -1,16 +1,16 @@
 /**
  * Responsibilidad: página de calibración del mapa de regiones.
- * Existe para verificar, sobre el escaneo falso, que cada campo del inventario
- * tenga su región dibujada donde de verdad está: es la herramienta que hace
- * confiable el recorte antes de que haya escaneos reales.
+ * Existe para verificar, sobre el escaneo real de un reporte, que cada campo del
+ * inventario tenga su región dibujada donde de verdad está: es la herramienta que
+ * hace confiable el recorte.
  */
 
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
 import { MAPA_POR_DEFECTO, obtenerMapa } from "@/config/regiones";
 import { MOSTRAR_CALIBRACION } from "@/config/entorno";
-import { MapaCalibracion } from "@/features/revision/components/calibracion/mapa-calibracion";
-import { ListaCobertura } from "@/features/revision/components/calibracion/lista-cobertura";
+import { CalibracionConReporte } from "@/features/revision/components/calibracion/calibracion-con-reporte";
 
 export const metadata = {
   title: "Calibración de regiones",
@@ -38,15 +38,14 @@ export default function PaginaCalibracion() {
         </p>
         <p className="mt-1 text-meta text-faint">
           Si una región no coincide con la hoja, el recorte del campo va a
-          mostrar otra cosa: ajustá el mapa acá antes de confiar en la vista de
+          mostrar otra cosa: ajusta el mapa en `config/regiones` antes de confiar en la vista de
           corrección.
         </p>
       </header>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <MapaCalibracion mapa={mapa} />
-        <ListaCobertura mapa={mapa} />
-      </div>
+      <Suspense fallback={<p className="text-body text-muted">Cargando…</p>}>
+        <CalibracionConReporte />
+      </Suspense>
     </div>
   );
 }

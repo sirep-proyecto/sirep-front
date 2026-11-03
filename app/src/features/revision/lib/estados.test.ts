@@ -12,7 +12,7 @@ import { derivarEstadoReporte } from "./estados";
 
 function campo(
   estado: CampoReporte["estado_revision"],
-  id: CampoReporte["id"] = "cliente",
+  id: CampoReporte["id"] = "empresa",
 ): CampoReporte {
   return {
     id,

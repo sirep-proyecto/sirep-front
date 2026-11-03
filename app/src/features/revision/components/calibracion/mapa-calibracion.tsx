@@ -1,5 +1,5 @@
 /**
- * Responsabilidad: dibujar todas las regiones del mapa sobre el escaneo falso
+ * Responsabilidad: dibujar todas las regiones del mapa sobre un escaneo real
  * y permitir activarlas o desactivarlas una por una.
  * Existe para calibrar el talonario a la vista: si una región no cae donde
  * cae el texto en la hoja, el recorte de esa campo va a mostrar otra cosa.
@@ -13,6 +13,7 @@ import { Boton } from "@/components/ui/boton";
 import { CAMPOS_FORMULARIO } from "@/config/campos-formulario";
 import { HojaEscaneada } from "@/features/revision/components/escaneo/hoja-escaneada";
 import type { IdCampo } from "@/features/revision/types/campos";
+import type { ReporteVista } from "@/features/revision/types/dominio";
 import type {
   MapaRegiones,
   NumeroPagina,
@@ -20,12 +21,14 @@ import type {
 
 interface MapaCalibracionProps {
   mapa: MapaRegiones;
+  /** Reporte real cuyo escaneo sirve de base para comprobar las regiones. */
+  reporte: ReporteVista;
 }
 
 const TRAZO_REGION = "var(--petrol-600)";
 const RELLENO_ACTIVO = "var(--petrol-50)";
 
-export function MapaCalibracion({ mapa }: MapaCalibracionProps) {
+export function MapaCalibracion({ mapa, reporte }: MapaCalibracionProps) {
   const [pagina, setPagina] = useState<NumeroPagina>(1);
   const [ocultos, setOcultos] = useState<ReadonlySet<IdCampo>>(() => new Set());
   const [seleccion, setSeleccion] = useState<IdCampo | null>(null);
@@ -64,7 +67,10 @@ export function MapaCalibracion({ mapa }: MapaCalibracionProps) {
             aria-label="Página del talonario"
             className="flex overflow-hidden rounded-sm border border-line-strong"
           >
-            {([1, 2] as const).map((numero) => (
+            {Array.from(
+              { length: Math.max(1, reporte.escaneo.paginas_urls.length) },
+              (_, indice) => indice + 1,
+            ).map((numero) => (
               <button
                 key={numero}
                 type="button"
@@ -77,7 +83,7 @@ export function MapaCalibracion({ mapa }: MapaCalibracionProps) {
                     : "bg-raised text-muted hover:bg-sunken",
                 ].join(" ")}
               >
-                {numero === 1 ? "Anverso" : "Reverso"}
+                {`Página ${numero}`}
               </button>
             ))}
           </div>
@@ -112,7 +118,7 @@ export function MapaCalibracion({ mapa }: MapaCalibracionProps) {
         <HojaEscaneada
           mapa={mapa}
           pagina={pagina}
-          reporte={null}
+          reporte={reporte}
           className="absolute inset-0 h-full w-full"
         />
 

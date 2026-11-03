@@ -1,9 +1,8 @@
 /**
  * Responsabilidad: entregar el repositorio de reportes a los componentes sin
- * que ellos importen datos simulados.
- * Existe para mantener la regla de arquitectura: `mocks/` solo lo importa el
- * servicio. El repositorio se puede inyectar por props (pruebas, demos) y si
- * nadie lo aporta, se crea uno solo por montaje.
+ * que ellos conozcan la API.
+ * El repositorio se puede inyectar por props (pruebas) y si nadie lo aporta, se
+ * crea uno solo por montaje.
  */
 
 "use client";
@@ -24,7 +23,7 @@ const RepositorioContext = createContext<RepositorioReportes | null>(null);
 
 interface ProveedorRepositorioProps {
   children: ReactNode;
-  /** Permite inyectar una implementación distinta (pruebas, Supabase, demo). */
+  /** Permite inyectar una implementación distinta (pruebas). */
   repositorio?: RepositorioReportes;
 }
 

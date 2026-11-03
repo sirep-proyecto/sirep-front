@@ -6,13 +6,13 @@
  */
 
 import type { MapaRegiones } from "@/features/revision/types/regiones";
-import { MAPA_TALONARIO_2005 } from "./talonario-2005-a4";
+import { MAPA_TALONARIO_GO_SERVICE } from "./talonario-go-service-carta";
 
 export const MAPAS_REGIONES: Readonly<Record<string, MapaRegiones>> = {
-  [MAPA_TALONARIO_2005.id]: MAPA_TALONARIO_2005,
+  [MAPA_TALONARIO_GO_SERVICE.id]: MAPA_TALONARIO_GO_SERVICE,
 };
 
-export const MAPA_POR_DEFECTO = MAPA_TALONARIO_2005.id;
+export const MAPA_POR_DEFECTO = MAPA_TALONARIO_GO_SERVICE.id;
 
 export function buscarMapa(id: string): MapaRegiones | null {
   return MAPAS_REGIONES[id] ?? null;

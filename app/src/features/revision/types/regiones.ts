@@ -8,7 +8,8 @@
 
 import type { IdCampo } from "./campos";
 
-export type NumeroPagina = 1 | 2;
+/** Un reporte puede traer anverso, reverso y hojas adicionales. */
+export type NumeroPagina = number;
 
 export interface Region {
   x: number;
