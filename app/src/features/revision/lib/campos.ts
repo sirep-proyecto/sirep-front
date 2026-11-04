@@ -21,7 +21,8 @@ export function componerCampo(
     return {
         ...campo,
         definicion: CAMPOS_POR_ID[campo.id],
-        region: mapa.regiones[campo.id],
+        // La región medida sobre el escaneo real manda; el mapa fijo es solo el respaldo.
+        region: campo.region ?? mapa.regiones[campo.id],
     };
 }
 

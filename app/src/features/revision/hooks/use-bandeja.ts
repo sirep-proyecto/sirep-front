@@ -8,7 +8,7 @@
 
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   filtrarReportes,
@@ -16,6 +16,7 @@ import {
 } from "@/features/revision/lib/filtros";
 import { ordenarReportes } from "@/features/revision/lib/orden";
 import { calcularResumenBandeja } from "@/features/revision/lib/resumen";
+import { useTiempoReal } from "@/features/revision/hooks/use-tiempo-real";
 import { useRepositorio } from "@/features/revision/providers/repositorio-contexto";
 import type {
   FiltrosBandeja,
@@ -87,6 +88,29 @@ export function useBandeja(): UsoBandeja {
       vivo = false;
     };
   }, [repositorio, intento]);
+
+  // Cambios en vivo (reporte nuevo por Telegram o campo revisado por otra
+  // persona): se vuelve a pedir la lista sin pasar por "cargando", para que la
+  // tabla se actualice sin parpadeo ni perder filtros. Se agrupan los avisos
+  // seguidos (un PDF de varias páginas, varias revisiones) en una sola carga.
+  const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useTiempoReal(() => {
+    if (temporizador.current) clearTimeout(temporizador.current);
+    temporizador.current = setTimeout(() => {
+      repositorio
+        .listarReportes()
+        .then((reportes) => setReportesArchivo(reportes))
+        .catch(() => {
+          // Un fallo de la actualización en vivo no debe tapar lo ya cargado
+        });
+    }, 400);
+  });
+  useEffect(
+    () => () => {
+      if (temporizador.current) clearTimeout(temporizador.current);
+    },
+    [],
+  );
 
   const reportes = useMemo(
     () => ordenarReportes(filtrarReportes(reportesArchivo, filtros), orden),

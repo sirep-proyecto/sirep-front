@@ -6,14 +6,15 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import Link from "next/link";
 import {
-  AlertCircle,
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
   Eye,
+  EyeOff,
+  Maximize2,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
@@ -31,6 +32,7 @@ import { PanelCampos } from "@/features/revision/components/correccion/panel-cam
 import { ProgresoRevision } from "@/features/revision/components/correccion/progreso-revision";
 import { HojaEscaneada } from "@/features/revision/components/escaneo/hoja-escaneada";
 import { RecorteEscaneo } from "@/features/revision/components/escaneo/recorte";
+import { calcularRecorte } from "@/features/revision/lib/recorte";
 import { useRevisionReporte } from "@/features/revision/hooks/use-revision-reporte";
 import type { NumeroPagina } from "@/features/revision/types/regiones";
 
@@ -45,6 +47,9 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
   const [modalOriginal, setModalOriginal] = useState(false);
   const [paginaEscaneo, setPaginaEscaneo] = useState<NumeroPagina>(1);
   const [zoomNivel, setZoomNivel] = useState(1);
+  // El recorte del campo activo es opcional: el resaltado sobre el propio
+  // documento ya ubica el campo, así que solo se muestra si se pide con el ojo.
+  const [verRecorte, setVerRecorte] = useState(false);
 
   if (revision.estado === "cargando") return <CargandoRevision />;
   if (revision.estado === "no_encontrado")
@@ -77,7 +82,7 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-(--layout-max) flex-col gap-5 px-(--space-gutter) pb-16 pt-4">
+    <div className="mx-auto flex w-full max-w-(--layout-max) flex-col gap-4 px-(--space-gutter) pb-6 pt-3">
       {/* Barra de navegación rápida a la bandeja */}
       <nav aria-label="Navegación secundaria">
         <Link
@@ -99,32 +104,6 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
         onVerImagenReal={() => setModalOriginal(true)}
       />
 
-      {/* Alerta de bloqueo cuando el modo edición está apagado */}
-      {!modoEdicion ? (
-        <aside
-          role="note"
-          className="flex items-center justify-between rounded-xs border border-amber-200 bg-amber-50/70 px-3.5 py-2 text-meta text-amber-900"
-        >
-          <div className="flex items-center gap-2">
-            <AlertCircle className="size-4 shrink-0 text-amber-700" />
-            <span>
-              <strong>Campos en modo lectura protegida:</strong> Los campos
-              están protegidos. Haz clic en{" "}
-              <strong>&ldquo;Editar&rdquo;</strong> arriba para habilitar
-              cambios manuales.
-            </span>
-          </div>
-          <Boton
-            variante="secundario"
-            tamano="sm"
-            onClick={() => setModoEdicion(true)}
-            className="shrink-0 font-medium"
-          >
-            Habilitar Edición
-          </Boton>
-        </aside>
-      ) : null}
-
       {/* Cabecera contextual del reporte */}
       <CabeceraReporte reporte={reporte} />
 
@@ -134,18 +113,21 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
         ultimoResuelto={
           revision.ultimaAccion
             ? (reporte.campos.find((c) => c.id === revision.ultimaAccion)
-                ?.definicion.etiqueta ?? null)
+              ?.definicion.etiqueta ?? null)
             : null
         }
         onDeshacer={() => void revision.deshacer()}
       />
 
       {/* Contenedor principal de dos paneles (Visor de Escaneo | Lista de Campos) */}
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+      <div
+        id="espacio-de-trabajo"
+        className="grid scroll-mt-[calc(var(--header-h)+0.5rem)] gap-5 lg:h-[calc(100dvh-var(--header-h)-1.5rem)] lg:min-h-[560px] lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)]"
+      >
         {/* Panel izquierdo: Visor de escaneo */}
         <section
           aria-label="Visor del escaneo"
-          className="flex flex-col gap-3 rounded-md border border-line bg-paper p-4 shadow-xs"
+          className="animar-entrada flex min-h-0 flex-col gap-3 rounded-md border border-line bg-paper p-4 shadow-xs lg:h-full"
         >
           <div className="flex items-center justify-between border-b border-line pb-3">
             <div className="flex items-center gap-2">
@@ -158,13 +140,37 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
             </div>
 
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setVerRecorte((v) => !v)}
+                aria-pressed={verRecorte}
+                title={
+                  verRecorte
+                    ? "Ocultar el recorte del campo activo"
+                    : "Ver el recorte del campo activo"
+                }
+                className={[
+                  "inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-micro font-medium transition-colors duration-150 ease-[var(--ease-salida)]",
+                  verRecorte
+                    ? "border-petrol-200 bg-petrol-50 text-petrol-700"
+                    : "border-line-strong bg-raised text-muted hover:bg-sunken hover:text-ink",
+                ].join(" ")}
+              >
+                {verRecorte ? (
+                  <EyeOff className="size-3.5" aria-hidden="true" />
+                ) : (
+                  <Eye className="size-3.5" aria-hidden="true" />
+                )}
+                Recorte
+              </button>
+
               <Boton
                 variante="secundario"
                 tamano="sm"
                 onClick={() => setModalOriginal(true)}
                 className="gap-1 text-micro"
               >
-                <Eye className="size-3" />
+                <Maximize2 className="size-3" />
                 Original
               </Boton>
 
@@ -225,16 +231,29 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
             </div>
           </div>
 
-          {/* Recorte destacado del campo activo */}
-          {revision.campoActivo ? (
-            <div className="rounded-xs border border-petrol-200 bg-petrol-50/50 p-2.5">
-              <p className="text-micro uppercase tracking-label font-medium text-petrol-800">
-                Recorte del campo activo:{" "}
-                <span className="font-semibold">
-                  {revision.campoActivo.definicion.etiqueta}
-                </span>
+          {/* Recorte del campo activo: solo a pedido (ojo) y de tamaño acotado */}
+          {verRecorte && revision.campoActivo ? (
+            <div
+              key={revision.campoActivo.id}
+              className="animar-aparecer shrink-0 rounded-xs border border-petrol-200 bg-petrol-50/50 px-2.5 py-2"
+            >
+              <p className="text-micro font-medium uppercase tracking-label text-petrol-800">
+                {revision.campoActivo.definicion.etiqueta}
               </p>
-              <div className="mt-1.5 overflow-hidden rounded-xs border border-petrol-300 bg-paper">
+              <div
+                className="mt-1.5 overflow-hidden rounded-xs border border-petrol-300 bg-paper"
+                style={{
+                  // Altura máxima de ~6 rem sin deformar el recorte: el ancho
+                  // se limita según la proporción del campo.
+                  width: `min(100%, ${(
+                    6 *
+                    calcularRecorte(
+                      revision.campoActivo.region,
+                      reporte.mapa,
+                    ).aspecto_ventana
+                  ).toFixed(2)}rem)`,
+                }}
+              >
                 <RecorteEscaneo
                   mapa={reporte.mapa}
                   region={revision.campoActivo.region}
@@ -251,8 +270,7 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
 
           {/* Lienzo del escaneo */}
           <div
-            className="relative min-h-[540px] w-full overflow-auto rounded-xs border border-line bg-sunken p-2 flex items-center justify-center"
-            style={{ maxHeight: "720px" }}
+            className="scroll-fino relative flex min-h-[420px] w-full items-start justify-center overflow-auto rounded-xs border border-line bg-sunken p-2 lg:min-h-0 lg:flex-1"
           >
             <div
               style={{
@@ -270,10 +288,10 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
                 resaltado={
                   revision.campoActivo
                     ? {
-                        region: revision.campoActivo.region,
-                        etiqueta: revision.campoActivo.definicion.etiqueta,
-                        tono: "amber",
-                      }
+                      region: revision.campoActivo.region,
+                      etiqueta: revision.campoActivo.definicion.etiqueta,
+                      tono: "amber",
+                    }
                     : null
                 }
               />
@@ -282,7 +300,7 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
         </section>
 
         {/* Panel derecho: Lista de campos con soporte de bloqueo */}
-        <div className="flex flex-col gap-4">
+        <div className="animar-lado flex min-h-0 flex-col lg:h-full" style={{ "--retardo": 90 } as CSSProperties}>
           <PanelCampos
             reporte={reporte}
             grupos={revision.grupos}

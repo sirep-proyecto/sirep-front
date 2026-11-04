@@ -38,6 +38,13 @@ export interface CampoReporte {
   revisado_en: string | null;
   corregido_por: string | null;
   corregido_en: string | null;
+  /** Nota del modelo sobre qué le hizo dudar (ej. "la 2.ª letra parece una o o una a"). */
+  observacion?: string | null;
+  /**
+   * Región del campo medida por el modelo sobre ESTE escaneo. Si falta (reportes
+   * anteriores o caja inválida) se usa el mapa fijo del talonario.
+   */
+  region?: Region | null;
 }
 
 export interface Escaneo {

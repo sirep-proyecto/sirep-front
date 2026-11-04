@@ -15,6 +15,7 @@ import {
     AlertTriangle,
     Ban,
     CheckCircle2,
+    Info,
     PencilLine,
     RotateCcw,
     X,
@@ -30,6 +31,7 @@ import {
 import { RecorteEscaneo } from "@/features/revision/components/escaneo/recorte";
 import { valorVigente } from "@/features/revision/lib/campos";
 import { fueResueltoPorPersona, requiereRevision } from "@/features/revision/lib/dudosos";
+import { detalleDuda } from "@/features/revision/lib/detalle-duda";
 import { formatearFechaHora } from "@/features/revision/lib/formato";
 import type {
     CampoVista,
@@ -107,6 +109,8 @@ export function TarjetaCampo({
     const tieneValor = (vigente ?? "").trim() !== "";
     const tono = tonoDeCampo(campo);
     const tamanio = amplio ? "lg" : "sm";
+    const duda =
+        campo.estado_revision === "pendiente" ? detalleDuda(campo) : null;
 
     const anchoRecorte = amplio ? "w-full" : "w-28";
     const apilar = amplio ? "flex-col" : "";
@@ -182,6 +186,28 @@ export function TarjetaCampo({
                     >
                         {valorModelo ?? "Sin lectura"}
                     </p>
+
+                    {duda ? (
+                        <div className="mt-2 flex items-start gap-2 rounded-xs border border-amber-200 bg-amber-50 px-2.5 py-1.5">
+                            <Info
+                                className="mt-0.5 size-3.5 shrink-0 text-amber-700"
+                                aria-hidden="true"
+                            />
+                            <div className="min-w-0 text-micro text-amber-700">
+                                <p className="font-semibold uppercase tracking-label">
+                                    Por qué es dudoso
+                                </p>
+                                <p className="mt-0.5 text-meta leading-snug text-ink">
+                                    {duda.motivo}
+                                </p>
+                                {duda.observacion ? (
+                                    <p className="mt-0.5 text-meta leading-snug text-muted">
+                                        Nota del modelo: {duda.observacion}
+                                    </p>
+                                ) : null}
+                            </div>
+                        </div>
+                    ) : null}
 
                     {campo.estado_revision === "confirmado" ? (
                         <p className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-micro text-green-700">

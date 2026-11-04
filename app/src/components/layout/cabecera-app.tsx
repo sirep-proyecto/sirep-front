@@ -14,6 +14,8 @@ import { Inbox, Map, ScanLine } from "lucide-react";
 import { MOSTRAR_CALIBRACION } from "@/config/entorno";
 import { USUARIO_ACTUAL } from "@/config/sesion";
 
+import { IndicadorEnVivo } from "./indicador-en-vivo";
+
 function Marca() {
   return (
     <span
@@ -87,6 +89,8 @@ export function CabeceraApp() {
             </Link>
           ) : null}
         </nav>
+
+        <IndicadorEnVivo />
 
         <div className="flex items-center gap-2.5 border-l border-line pl-4">
           <span

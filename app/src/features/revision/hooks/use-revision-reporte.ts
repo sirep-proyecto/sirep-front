@@ -10,7 +10,7 @@
 
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { obtenerMapa } from "@/config/regiones";
 import { USUARIO_ACTUAL } from "@/config/sesion";
@@ -25,6 +25,7 @@ import {
     type GrupoCampos,
 } from "@/features/revision/lib/dudosos";
 import { pluralizar } from "@/features/revision/lib/formato";
+import { useTiempoReal } from "@/features/revision/hooks/use-tiempo-real";
 import { useRepositorio } from "@/features/revision/providers/repositorio-contexto";
 import { ErrorRepositorio } from "@/features/revision/services";
 import type {
@@ -186,6 +187,36 @@ export function useRevisionReporte(numero: string): RevisionReporte {
         };
     }, [numero, repositorio, cicloCarga]);
 
+    // Marca de la última acción hecha por esta pantalla: el servidor avisa de
+    // todo cambio, también del propio, y recargar justo después de guardar solo
+    // repetiría el mismo dato.
+    const ultimaAccionPropia = useRef(0);
+
+    useTiempoReal((evento) => {
+        const esteReporte =
+            !evento.numero ||
+            evento.numero === numero ||
+            evento.numero === reporte?.numero_reporte;
+        if (!esteReporte || campoEnCurso) return;
+        if (Date.now() - ultimaAccionPropia.current < 2500) return;
+
+        repositorio
+            .obtenerReporte(numero)
+            .then((encontrado) => {
+                if (!encontrado) return;
+                const vista = componerReporte(
+                    encontrado,
+                    obtenerMapa(encontrado.diseno_talonario),
+                );
+                // Solo se reemplazan los datos: el campo activo, el filtro y el
+                // "deshacer" siguen como estaban.
+                setReporte(vista);
+            })
+            .catch(() => {
+                // Un fallo de la actualización en vivo no interrumpe la revisión
+            });
+    });
+
     const recargar = useCallback(() => {
         setMensajeError(null);
         setEstado("cargando");
@@ -279,6 +310,7 @@ export function useRevisionReporte(numero: string): RevisionReporte {
 
             setCampoEnCurso(campo);
             setErrorAccion(null);
+            ultimaAccionPropia.current = Date.now();
             try {
                 const actualizado = await repositorio.revisarCampo(
                     reporte.numero_reporte,
@@ -305,6 +337,7 @@ export function useRevisionReporte(numero: string): RevisionReporte {
                 setErrorAccion({ campo, mensaje: mensajeDeError(error) });
                 return false;
             } finally {
+                ultimaAccionPropia.current = Date.now();
                 setCampoEnCurso(null);
             }
         },
