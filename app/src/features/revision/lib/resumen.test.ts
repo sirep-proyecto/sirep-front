@@ -56,7 +56,7 @@ function crearReporte(
     fecha_reporte: "2026-10-01",
     origen: "historico",
     estado: opciones.estado ?? "procesado",
-    diseno_talonario: "talonario-2005-a4",
+    diseno_talonario: "talonario-go-service-carta",
     escaneo: {
       id: `esc-${numero}`,
       numero_reporte: numero,
