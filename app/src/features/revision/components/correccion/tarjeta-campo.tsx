@@ -184,7 +184,7 @@ export function TarjetaCampo({
                             !valorModelo && "text-faint",
                         )}
                     >
-                        {valorModelo ?? "Sin lectura"}
+                        {valorModelo ?? (campo.no_leido ? "Sin lectura" : "En blanco en el papel")}
                     </p>
 
                     {duda ? (

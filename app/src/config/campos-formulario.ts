@@ -4,11 +4,14 @@
  * Existe como el único archivo que hay que tocar cuando el equipo agregue o
  * renombre un campo: nada de esto vive dentro de un componente.
  *
- * Debe coincidir con `sirep-back/src/escaneos/campos-formulario.ts`.
+ * Debe coincidir con `sirep-back/src/escaneos/campos-formulario.ts`. El orden es
+ * el de lectura del papel, de arriba abajo.
  *
- * TODO(inventario): faltan los campos que el formulario trae y el backend aún no
- * extrae (teléfono, contacto, último mantenimiento, cabezales, firmas). Se
- * agregan junto con la tabla de comparación acordada con RP-TECH.
+ * `opcional: true` marca lo que el papel suele traer en blanco (teléfono, tinta,
+ * casillas sin marcar, firmas): vacío ahí no es un problema de lectura.
+ *
+ * TODO(inventario): la frecuencia real de "lleno / vacío" de cada campo se
+ * confirma con los 5 reportes del inventario formal.
  */
 
 import type {
@@ -27,7 +30,12 @@ export const SECCIONES_FORMULARIO: readonly SeccionFormulario[] = [
   {
     id: "equipo",
     titulo: "Equipo y motivo",
-    descripcion: "Equipo intervenido, motivo de la visita y su estado.",
+    descripcion: "Equipo intervenido y motivo de la visita.",
+  },
+  {
+    id: "revision",
+    titulo: "Revisión inicial",
+    descripcion: "Estado, limpieza, cabezales, protección y medidas de línea.",
   },
   {
     id: "servicio",
@@ -37,12 +45,12 @@ export const SECCIONES_FORMULARIO: readonly SeccionFormulario[] = [
   {
     id: "repuestos",
     titulo: "Repuestos",
-    descripcion: "Código de los repuestos requeridos.",
+    descripcion: "Repuestos requeridos: tipo, código, descripción y cantidad.",
   },
   {
     id: "cierre",
-    titulo: "Visita al cliente",
-    descripcion: "Horas de llegada y de salida del técnico.",
+    titulo: "Cierre de la visita",
+    descripcion: "Horas, garantía, facturación y firmas.",
   },
 ] as const;
 
@@ -74,12 +82,31 @@ export const CAMPOS_FORMULARIO: readonly DefinicionCampo[] = [
     ayuda: "Formato día/mes/año, tal como está escrito en el papel.",
   },
   {
+    id: "telefono",
+    etiqueta: "Teléfono",
+    etiqueta_formulario: "Telf.",
+    seccion: "identificacion",
+    tipo: "codigo",
+    mono: true,
+    opcional: true,
+  },
+  {
     id: "direccion",
     etiqueta: "Dirección",
     etiqueta_formulario: "Dirección",
     seccion: "identificacion",
     tipo: "texto",
     mono: false,
+  },
+  {
+    id: "contacto",
+    etiqueta: "Contacto",
+    etiqueta_formulario: "Contacto",
+    seccion: "identificacion",
+    tipo: "texto",
+    mono: false,
+    ayuda: "Persona de contacto en el cliente.",
+    opcional: true,
   },
   {
     id: "equipo",
@@ -102,10 +129,96 @@ export const CAMPOS_FORMULARIO: readonly DefinicionCampo[] = [
     id: "estado_del_equipo",
     etiqueta: "Estado del equipo",
     etiqueta_formulario: "Estado del equipo",
-    seccion: "equipo",
-    tipo: "texto",
+    seccion: "revision",
+    tipo: "opcion",
     mono: false,
     ayuda: "Casilla marcada: operativo o inoperativo.",
+    opcional: true,
+  },
+  {
+    id: "ultimo_mantenimiento",
+    etiqueta: "Último mantenimiento",
+    etiqueta_formulario: "Último mant.",
+    seccion: "revision",
+    tipo: "texto",
+    mono: false,
+    opcional: true,
+  },
+  {
+    id: "limpieza_equipo",
+    etiqueta: "Limpieza del equipo",
+    etiqueta_formulario: "Limpieza del equipo",
+    seccion: "revision",
+    tipo: "opcion",
+    mono: false,
+    ayuda: "Casilla marcada: limpio o sucio.",
+    opcional: true,
+  },
+  {
+    id: "cabezales",
+    etiqueta: "Cabezales",
+    etiqueta_formulario: "Cabezales",
+    seccion: "revision",
+    tipo: "opcion",
+    mono: false,
+    ayuda: "Casilla marcada: bueno, regular o malo.",
+    opcional: true,
+  },
+  {
+    id: "sistema_proteccion",
+    etiqueta: "Sistema de protección",
+    etiqueta_formulario: "Sist. de protección",
+    seccion: "revision",
+    tipo: "texto",
+    mono: false,
+    ayuda: "Estab. / UPS marcados o lo escrito en el recuadro libre.",
+    opcional: true,
+  },
+  {
+    id: "tinta",
+    etiqueta: "Tinta",
+    etiqueta_formulario: "Tinta",
+    seccion: "revision",
+    tipo: "texto",
+    mono: false,
+    opcional: true,
+  },
+  {
+    id: "revision_linea_ln",
+    etiqueta: "Revisión de líneas L+N",
+    etiqueta_formulario: "L+N",
+    seccion: "revision",
+    tipo: "codigo",
+    mono: true,
+    opcional: true,
+  },
+  {
+    id: "revision_linea_lt",
+    etiqueta: "Revisión de líneas L+T",
+    etiqueta_formulario: "L+T",
+    seccion: "revision",
+    tipo: "codigo",
+    mono: true,
+    opcional: true,
+  },
+  {
+    id: "revision_linea_nt",
+    etiqueta: "Revisión de líneas N+T",
+    etiqueta_formulario: "N+T",
+    seccion: "revision",
+    tipo: "codigo",
+    mono: true,
+    opcional: true,
+  },
+  {
+    id: "operador",
+    etiqueta: "Operador",
+    etiqueta_formulario: "Operador",
+    seccion: "revision",
+    tipo: "texto",
+    mono: false,
+    ayuda: "Quien opera el equipo en el cliente.",
+    opcional: true,
   },
   {
     id: "procedimiento",
@@ -130,6 +243,17 @@ export const CAMPOS_FORMULARIO: readonly DefinicionCampo[] = [
     seccion: "servicio",
     tipo: "multilinea",
     mono: false,
+    opcional: true,
+  },
+  {
+    id: "repuestos_tipo",
+    etiqueta: "Tipo de repuestos",
+    etiqueta_formulario: "Repuestos requeridos",
+    seccion: "repuestos",
+    tipo: "opcion",
+    mono: false,
+    ayuda: "Casilla marcada: venta, descarte o garantía.",
+    opcional: true,
   },
   {
     id: "codigo_repuesto",
@@ -138,6 +262,26 @@ export const CAMPOS_FORMULARIO: readonly DefinicionCampo[] = [
     seccion: "repuestos",
     tipo: "codigo",
     mono: true,
+  },
+  {
+    id: "repuestos_descripcion",
+    etiqueta: "Descripción de repuestos",
+    etiqueta_formulario: "Descripción",
+    seccion: "repuestos",
+    tipo: "multilinea",
+    mono: false,
+    ayuda: "Una línea por fila de la tabla.",
+    opcional: true,
+  },
+  {
+    id: "repuestos_cantidad",
+    etiqueta: "Cantidad de repuestos",
+    etiqueta_formulario: "Cant.",
+    seccion: "repuestos",
+    tipo: "codigo",
+    mono: true,
+    ayuda: "Una línea por fila de la tabla.",
+    opcional: true,
   },
   {
     id: "hora_llegada",
@@ -154,6 +298,46 @@ export const CAMPOS_FORMULARIO: readonly DefinicionCampo[] = [
     seccion: "cierre",
     tipo: "codigo",
     mono: true,
+  },
+  {
+    id: "garantia",
+    etiqueta: "Garantía",
+    etiqueta_formulario: "Garantía",
+    seccion: "cierre",
+    tipo: "casilla",
+    mono: false,
+    ayuda: "Casilla de información de la labor.",
+    opcional: true,
+  },
+  {
+    id: "facturado",
+    etiqueta: "Facturado",
+    etiqueta_formulario: "Facturado",
+    seccion: "cierre",
+    tipo: "casilla",
+    mono: false,
+    ayuda: "Casilla de información de la labor.",
+    opcional: true,
+  },
+  {
+    id: "firma_operador",
+    etiqueta: "Firma del operador del equipo",
+    etiqueta_formulario: "Firma del operador del equipo",
+    seccion: "cierre",
+    tipo: "firma",
+    mono: false,
+    ayuda: "Sí si hay una firma sobre la línea.",
+    opcional: true,
+  },
+  {
+    id: "firma_cliente",
+    etiqueta: "Firma del cliente o administrador",
+    etiqueta_formulario: "Firma del cliente o administrador",
+    seccion: "cierre",
+    tipo: "firma",
+    mono: false,
+    ayuda: "Sí si hay una firma sobre la línea.",
+    opcional: true,
   },
 ] as const;
 

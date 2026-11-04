@@ -11,16 +11,34 @@ export const IDS_CAMPOS = [
   "tecnico",
   "empresa",
   "fecha",
+  "telefono",
   "direccion",
+  "contacto",
   "equipo",
   "motivo",
   "estado_del_equipo",
+  "ultimo_mantenimiento",
+  "limpieza_equipo",
+  "cabezales",
+  "sistema_proteccion",
+  "tinta",
+  "revision_linea_ln",
+  "revision_linea_lt",
+  "revision_linea_nt",
+  "operador",
   "procedimiento",
   "conclusion",
   "recomendaciones",
+  "repuestos_tipo",
   "codigo_repuesto",
+  "repuestos_descripcion",
+  "repuestos_cantidad",
   "hora_llegada",
   "hora_salida",
+  "garantia",
+  "facturado",
+  "firma_operador",
+  "firma_cliente",
 ] as const;
 
 export type IdCampo = (typeof IDS_CAMPOS)[number];
@@ -28,6 +46,7 @@ export type IdCampo = (typeof IDS_CAMPOS)[number];
 export const IDS_SECCIONES = [
   "identificacion",
   "equipo",
+  "revision",
   "servicio",
   "repuestos",
   "cierre",
@@ -40,6 +59,8 @@ export type TipoCampo =
   | "fecha"
   | "numero"
   | "codigo"
+  | "opcion"
+  | "casilla"
   | "multilinea"
   | "firma"
   | "sello";
@@ -54,6 +75,8 @@ export interface DefinicionCampo {
   /** Los datos que se copian o comparan se muestran en monoespaciada. */
   mono: boolean;
   ayuda?: string;
+  /** El papel suele traerlo en blanco: vacío no es un problema de lectura. */
+  opcional?: boolean;
 }
 
 export interface SeccionFormulario {
