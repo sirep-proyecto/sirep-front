@@ -9,20 +9,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Inbox, Map, ScanLine } from "lucide-react";
+import { Inbox, Map } from "lucide-react";
 
 import { MOSTRAR_CALIBRACION } from "@/config/entorno";
 import { USUARIO_ACTUAL } from "@/config/sesion";
 
 import { IndicadorEnVivo } from "./indicador-en-vivo";
 
+// Importar para cargar la imagen >_< 
+import Image from "next/image";
+import LgoIcon from '../../app/icon.png'
+
 function Marca() {
   return (
     <span
       aria-hidden="true"
-      className="relative flex size-9 items-center justify-center rounded-lg bg-linear-to-br from-petrol-600 to-petrol-700 text-paper shadow-lift ring-1 ring-inset ring-white/20"
+      className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg"
     >
-      <ScanLine className="size-[1.15rem]" strokeWidth={2.25} />
+      <Image src={LgoIcon} alt="logo empresa" 
+        className=" object-contain" priority/>
     </span>
   );
 }
