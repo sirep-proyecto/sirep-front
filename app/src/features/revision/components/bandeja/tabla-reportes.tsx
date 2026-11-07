@@ -20,6 +20,7 @@ import type { Reporte } from "@/features/revision/types/dominio";
 
 interface TablaReportesProps {
   reportes: readonly Reporte[];
+  ruta: string
 }
 
 const CLASE_CELDA = "border-b border-line px-4 py-2.5";
@@ -27,7 +28,7 @@ const CLASE_CELDA = "border-b border-line px-4 py-2.5";
 const CLASE_CABECERA =
   "border-b border-line px-4 py-3 text-left text-micro font-medium uppercase tracking-label text-muted";
 
-function FilaReporte({ reporte }: { reporte: Reporte }) {
+function FilaReporte({ reporte, ruta }: { reporte: Reporte, ruta: string }) {
   const {
     numero_reporte,
     cliente,
@@ -50,7 +51,7 @@ function FilaReporte({ reporte }: { reporte: Reporte }) {
          * visible solo dice el N°.
          */}
         <Link
-          href={`/reportes/${numero_reporte}`}
+          href={`${ruta}${numero_reporte}`}
           aria-label={`Abrir el reporte N° ${numero_reporte} de ${cliente}`}
           className={[
             "rounded-xs font-mono text-meta font-medium text-petrol-700",
@@ -81,7 +82,7 @@ function FilaReporte({ reporte }: { reporte: Reporte }) {
   );
 }
 
-export function TablaReportes({ reportes }: TablaReportesProps) {
+export function TablaReportes({ reportes, ruta }: TablaReportesProps) {
   return (
     <div className="hidden overflow-hidden rounded-lg border border-line bg-raised shadow-lift lg:block">
       <div className="overflow-x-auto scroll-fino">
@@ -120,7 +121,7 @@ export function TablaReportes({ reportes }: TablaReportesProps) {
         </thead>
         <tbody>
           {reportes.map((reporte) => (
-            <FilaReporte key={reporte.id} reporte={reporte} />
+            <FilaReporte key={reporte.id} reporte={reporte} ruta={ruta}/>
           ))}
         </tbody>
       </table>

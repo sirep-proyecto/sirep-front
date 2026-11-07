@@ -8,7 +8,8 @@
 
 "use client";
 
-import { Check, Download, Eye, FileText, Lock, Unlock } from "lucide-react";
+import { Check, Download, Eye, FileText, Lock, Unlock, Map } from "lucide-react";
+import Link from "next/link";
 
 import { Boton } from "@/components/ui/boton";
 
@@ -61,6 +62,18 @@ export function BarraAccionesReporte({
           <Eye className="size-3.5" aria-hidden="true" />
           Ver original
         </Boton>
+
+        <Boton
+          variante="secundario"
+          tamano="sm"
+          aria-label="Ver archivo escaneado original"
+          className="gap-1.5"
+        >
+          <Map className="size-3.5" aria-hidden="true" />
+          <Link href={`/dev/regiones?reporte=${numeroReporte}`}>
+            Ver Regiones
+          </Link>
+        </Boton>        
 
         <Boton
           variante={modoEdicion ? "primario" : "secundario"}

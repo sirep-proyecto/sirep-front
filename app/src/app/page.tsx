@@ -79,8 +79,8 @@ export default function PaginaBandeja() {
 
       {conResultados ? (
         <>
-          <TablaReportes reportes={bandeja.reportes} />
-          <ListaTarjetas reportes={bandeja.reportes} />
+          <TablaReportes reportes={bandeja.reportes} ruta="/reportes/"/>
+          <ListaTarjetas reportes={bandeja.reportes}/>
         </>
       ) : null}
     </div>
