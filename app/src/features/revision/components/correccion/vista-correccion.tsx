@@ -33,6 +33,12 @@ import { ProgresoRevision } from "@/features/revision/components/correccion/prog
 import { HojaEscaneada } from "@/features/revision/components/escaneo/hoja-escaneada";
 import { RecorteEscaneo } from "@/features/revision/components/escaneo/recorte";
 import { calcularRecorte } from "@/features/revision/lib/recorte";
+import {
+  descargarReporteAmbos,
+  descargarReporteMarkdown,
+  descargarReportePDF,
+} from "@/features/revision/lib/descargas";
+import type { FormatoDescarga } from "@/features/revision/components/correccion/menu-descarga";
 import { useRevisionReporte } from "@/features/revision/hooks/use-revision-reporte";
 import type { NumeroPagina } from "@/features/revision/types/regiones";
 
@@ -74,11 +80,14 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
     1,
   );
 
-  const handleDescargarPDF = () => {
-    const anterior = document.title;
-    document.title = `Reporte_${reporte.numero_reporte}`;
-    window.print();
-    document.title = anterior;
+  const handleDescargar = async (formato: FormatoDescarga) => {
+    if (formato === "markdown") {
+      descargarReporteMarkdown(reporte);
+    } else if (formato === "pdf") {
+      descargarReportePDF(reporte);
+    } else if (formato === "ambos") {
+      await descargarReporteAmbos(reporte);
+    }
   };
 
   return (
@@ -100,7 +109,7 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
         cliente={reporte.cliente}
         modoEdicion={modoEdicion}
         onAlternarEdicion={() => setModoEdicion((prev) => !prev)}
-        onDescargarPDF={handleDescargarPDF}
+        onDescargar={handleDescargar}
         onVerImagenReal={() => setModalOriginal(true)}
       />
 

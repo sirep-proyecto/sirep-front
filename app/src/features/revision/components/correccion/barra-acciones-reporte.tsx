@@ -8,17 +8,19 @@
 
 "use client";
 
-import { Check, Download, Eye, FileText, Lock, Unlock, Map } from "lucide-react";
+import { Check, Eye, FileText, Lock, Unlock, Map } from "lucide-react";
 import Link from "next/link";
 
 import { Boton } from "@/components/ui/boton";
+import { MenuDescarga, type FormatoDescarga } from "./menu-descarga";
 
 interface BarraAccionesReporteProps {
   numeroReporte: string;
   cliente: string;
   modoEdicion: boolean;
   onAlternarEdicion: () => void;
-  onDescargarPDF: () => void;
+  onDescargar?: (formato: FormatoDescarga) => Promise<void> | void;
+  onDescargarPDF?: () => void;
   onVerImagenReal: () => void;
 }
 
@@ -27,6 +29,7 @@ export function BarraAccionesReporte({
   cliente,
   modoEdicion,
   onAlternarEdicion,
+  onDescargar,
   onDescargarPDF,
   onVerImagenReal,
 }: BarraAccionesReporteProps) {
@@ -96,16 +99,12 @@ export function BarraAccionesReporte({
           )}
         </Boton>
 
-        <Boton
-          variante="secundario"
-          tamano="sm"
-          onClick={onDescargarPDF}
-          aria-label="Descargar reporte como PDF"
-          className="gap-1.5"
-        >
-          <Download className="size-3.5" aria-hidden="true" />
-          Descargar PDF
-        </Boton>
+        <MenuDescarga
+          onDescargar={(formato) => {
+            if (onDescargar) return onDescargar(formato);
+            if (onDescargarPDF) onDescargarPDF();
+          }}
+        />
       </div>
     </div>
   );
