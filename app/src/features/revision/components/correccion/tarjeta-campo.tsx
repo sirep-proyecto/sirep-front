@@ -102,6 +102,7 @@ export function TarjetaCampo({
     const [editando, setEditando] = useState(false);
 
     const amplio = variante === "amplio";
+    const automatico = campo.estado_revision === "auto";
     const pendiente = requiereRevision(campo);
     const resuelto = fueResueltoPorPersona(campo);
     const valorModelo = campo.valor_modelo?.trim() ? campo.valor_modelo : null;
@@ -317,10 +318,53 @@ export function TarjetaCampo({
                 </div>
             ) : null}
 
-            {!editando && resuelto ? (
-                <div className="mt-3">
+            {!editando && automatico ? (
+                <div className={twMerge("mt-3 flex flex-wrap gap-2", apilar)}>
                     <Boton
                         variante="secundario"
+                        tamano={tamanio}
+                        onClick={() => {
+                            if (modoEdicion) setEditando(true);
+                        }}
+                        disabled={enCurso || !modoEdicion}
+                        className={twMerge(llenar, !modoEdicion && "cursor-not-allowed opacity-50")}
+                    >
+                        <PencilLine className="size-4 shrink-0" aria-hidden="true" />
+                        Corregir
+                    </Boton>
+                    <Boton
+                        variante="fantasma"
+                        tamano={tamanio}
+                        onClick={onIlegible}
+                        disabled={enCurso || !modoEdicion}
+                        className={twMerge(
+                            llenar,
+                            "text-brick-700 hover:bg-brick-50 hover:text-brick-700",
+                            !modoEdicion && "cursor-not-allowed opacity-50",
+                        )}
+                    >
+                        <Ban className="size-4 shrink-0" aria-hidden="true" />
+                        Marcar ilegible
+                    </Boton>
+                </div>
+            ) : null}
+
+            {!editando && resuelto ? (
+                <div className={twMerge("mt-3 flex flex-wrap gap-2", apilar)}>
+                    <Boton
+                        variante="secundario"
+                        tamano={tamanio}
+                        onClick={() => {
+                            if (modoEdicion) setEditando(true);
+                        }}
+                        disabled={enCurso || !modoEdicion}
+                        className={twMerge(llenar, !modoEdicion && "cursor-not-allowed opacity-50")}
+                    >
+                        <PencilLine className="size-4 shrink-0" aria-hidden="true" />
+                        Corregir
+                    </Boton>
+                    <Boton
+                        variante="fantasma"
                         tamano={tamanio}
                         onClick={onReabrir}
                         disabled={enCurso || !modoEdicion}

@@ -116,6 +116,7 @@ export const CAMPOS_FORMULARIO: readonly DefinicionCampo[] = [
     tipo: "texto",
     mono: false,
     ayuda: "Marca y modelo del equipo intervenido.",
+    opcional: true,
   },
   {
     id: "motivo",
@@ -124,6 +125,7 @@ export const CAMPOS_FORMULARIO: readonly DefinicionCampo[] = [
     seccion: "equipo",
     tipo: "texto",
     mono: false,
+    opcional: true,
   },
   {
     id: "estado_del_equipo",
@@ -235,6 +237,7 @@ export const CAMPOS_FORMULARIO: readonly DefinicionCampo[] = [
     seccion: "servicio",
     tipo: "multilinea",
     mono: false,
+    opcional: true,
   },
   {
     id: "recomendaciones",
@@ -262,6 +265,7 @@ export const CAMPOS_FORMULARIO: readonly DefinicionCampo[] = [
     seccion: "repuestos",
     tipo: "codigo",
     mono: true,
+    opcional: true,
   },
   {
     id: "repuestos_descripcion",
