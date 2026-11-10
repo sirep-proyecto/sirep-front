@@ -1,3 +1,20 @@
+---
+integrante: Flavio
+proyecto: SIREP
+sprint: 2
+estado: completado
+video: https://drive.google.com/drive/folders/sirep-sprint2-demo-flavio
+---
+- [x] SIREP-S2-T06-A
+- [x] SIREP-S2-T06-B
+- [x] SIREP-S2-T06-C
+- [x] SIREP-S2-T10-A
+- [x] SIREP-S2-T10-B
+- [x] SIREP-S2-T10-C
+- [x] SIREP-S2-T11-A
+- [x] SIREP-S2-T11-B
+- [x] SIREP-S2-T11-C
+
 # Checklist de Seguimiento — Flavio (Frontend)
 Sprint 2: Alineación con RP-TECH y Mapa de Regiones
 
@@ -14,6 +31,6 @@ Sprint 2: Alineación con RP-TECH y Mapa de Regiones
 
 ## Entregables de Cierre (Viernes 6 de noviembre)
 - [x] Disciplina de Git: 3 commits obligatorios por tarea (`SIREP-S2-TXX-A`, `SIREP-S2-TXX-B`, `SIREP-S2-TXX-C`).
-- [x] Sección individual en el informe semanal Frontend.
+- [x] Sección individual en el informe semanal Frontend (`docs/INFORME_SEMANAL_FRONTEND.md`).
 - [x] Empaquetado `sirep-front.bundle`.
 - [x] Preparación de defensa individual de 10 min.

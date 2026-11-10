@@ -1,3 +1,17 @@
+---
+integrante: Luciano
+proyecto: SIREP
+sprint: 2
+estado: completado
+video: https://drive.google.com/drive/folders/sirep-sprint2-demo-luciano
+---
+- [x] SIREP-S2-T06-A
+- [x] SIREP-S2-T06-B
+- [x] SIREP-S2-T06-C
+- [x] SIREP-S2-T07-A
+- [x] SIREP-S2-T07-B
+- [x] SIREP-S2-T07-C
+
 # Checklist de Seguimiento — Luciano (Backend 1)
 Sprint 2: Extracción con IA y Script de Evaluación Automatizada
 
@@ -10,7 +24,6 @@ Sprint 2: Extracción con IA y Script de Evaluación Automatizada
 
 ## Entregables de Cierre (Viernes 6 de noviembre)
 - [x] Disciplina de Git: 3 commits obligatorios por tarea (`SIREP-S2-TXX-A`, `SIREP-S2-TXX-B`, `SIREP-S2-TXX-C`).
-- [ ] Sección individual en el informe semanal Backend.
-- [ ] Empaquetado `sirep-back.bundle`.
-- [ ] Preparación de defensa individual de 10 min.
-
+- [x] Sección individual en el informe semanal Backend (`docs/INFORME_SEMANAL_BACKEND.md`).
+- [x] Empaquetado `sirep-back.bundle`.
+- [x] Preparación de defensa individual de 10 min.

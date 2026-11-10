@@ -9,9 +9,7 @@
  *
  * `opcional: true` marca lo que el papel suele traer en blanco (teléfono, tinta,
  * casillas sin marcar, firmas): vacío ahí no es un problema de lectura.
- *
- * TODO(inventario): la frecuencia real de "lleno / vacío" de cada campo se
- * confirma con los 5 reportes del inventario formal.
+ * Ver tabla de frecuencias sobre los 5 reportes en `docs/inventario-formulario-fisico.md`.
  */
 
 import type {
