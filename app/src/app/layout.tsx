@@ -4,6 +4,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 
 import { CabeceraApp } from "@/components/layout/cabecera-app";
 import { PieApp } from "@/components/layout/pie-app";
+import { ProtectorSesion } from "@/components/auth/protector-sesion";
 import { ProveedorRepositorio } from "@/features/revision/providers/repositorio-contexto";
 
 import "./globals.css";
@@ -52,7 +53,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <CabeceraApp />
           </Suspense>
           <main id="contenido" tabIndex={-1} className="flex-1">
-            {children}
+            <ProtectorSesion>{children}</ProtectorSesion>
           </main>
           <PieApp />
         </ProveedorRepositorio>
