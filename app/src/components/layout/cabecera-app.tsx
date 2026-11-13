@@ -46,11 +46,11 @@ function Marca() {
 
 function clasesEnlace(activo: boolean): string {
   return [
-    "relative flex h-9 items-center gap-2 rounded-md px-3 text-meta font-medium",
+    "relative flex h-9 items-center gap-2 rounded-md px-3 text-meta font-medium cursor-pointer",
     "transition-colors duration-150 ease-[var(--ease-salida)]",
     activo
-      ? "bg-petrol-50 text-petrol-700"
-      : "text-muted hover:bg-sunken hover:text-ink",
+      ? "border border-petrol-600/35 bg-petrol-50 text-petrol-700 shadow-xs"
+      : "border border-transparent text-muted hover:bg-sunken hover:text-ink",
   ].join(" ");
 }
 
@@ -72,6 +72,10 @@ export function CabeceraApp() {
   }, []);
 
   const usuarioVisible = usuarioSesion ?? USUARIO_ACTUAL;
+
+  if (!usuarioSesion) {
+    return null;
+  }
 
   async function manejarExportarExcel() {
     if (exportando) return;

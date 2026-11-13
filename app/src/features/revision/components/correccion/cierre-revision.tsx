@@ -74,7 +74,7 @@ export function CierreRevision({
             <div className="flex items-start gap-3">
                 <span
                     aria-hidden="true"
-                    className="flex size-9 shrink-0 items-center justify-center rounded-xs bg-green-600 text-paper"
+                    className="flex size-9 shrink-0 items-center justify-center rounded-xs bg-green-600 text-[#181513]"
                 >
                     <Stamp className="size-5" />
                 </span>

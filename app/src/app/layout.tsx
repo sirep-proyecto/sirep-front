@@ -47,9 +47,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           Saltar al contenido
         </a>
         <ProveedorRepositorio>
-          <Suspense
-            fallback={<div className="h-(--header-h) border-b border-line bg-raised" />}
-          >
+          <Suspense fallback={null}>
             <CabeceraApp />
           </Suspense>
           <main id="contenido" tabIndex={-1} className="flex-1">

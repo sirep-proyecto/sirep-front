@@ -4,7 +4,29 @@
  * clientes y que la sesión actual es provisional.
  */
 
+"use client";
+
+import { useEffect, useState } from "react";
+import {
+  obtenerUsuarioSesion,
+  suscribirSesion,
+  type UsuarioActual,
+} from "@/config/sesion";
+
 export function PieApp() {
+  const [usuarioSesion, setUsuarioSesion] = useState<UsuarioActual | null>(null);
+
+  useEffect(() => {
+    setUsuarioSesion(obtenerUsuarioSesion());
+    return suscribirSesion(() => {
+      setUsuarioSesion(obtenerUsuarioSesion());
+    });
+  }, []);
+
+  if (!usuarioSesion) {
+    return null;
+  }
+
   return (
     <footer className="border-t border-line bg-raised/60">
       <div className="mx-auto flex max-w-(--layout-max) flex-col gap-1 px-(--space-gutter) py-4 text-micro text-faint sm:flex-row sm:items-center sm:justify-between">

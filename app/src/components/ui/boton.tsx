@@ -15,19 +15,19 @@ const variantes = cva(
     "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md",
     "font-medium transition-[background-color,box-shadow,color,transform] duration-150 ease-[var(--ease-salida)]",
     "active:translate-y-px",
-    "disabled:pointer-events-none disabled:opacity-50",
+    "cursor-pointer disabled:cursor-not-allowed disabled:opacity-50",
     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-petrol-600",
   ],
   {
     variants: {
       variante: {
         primario:
-          "bg-petrol-600 text-paper shadow-xs ring-1 ring-inset ring-white/15 hover:bg-petrol-700",
+          "bg-gradient-to-r from-[#dcae6e] via-[#cfa05d] to-[#bf8e4b] text-[#181513] font-semibold shadow-md shadow-[rgba(220,175,110,0.18)] hover:brightness-105 active:scale-[0.99]",
         secundario:
-          "border border-line-strong bg-raised text-ink shadow-xs hover:border-petrol-200 hover:bg-petrol-50 hover:text-petrol-700",
+          "border border-line-strong bg-raised text-ink shadow-xs hover:border-petrol-600/40 hover:bg-petrol-50 hover:text-petrol-700",
         fantasma: "text-muted hover:bg-sunken hover:text-ink",
-        peligro: "bg-brick-600 text-paper shadow-xs hover:bg-brick-700",
-        exito: "bg-green-600 text-paper shadow-xs hover:bg-green-700",
+        peligro: "bg-brick-600 text-white shadow-xs hover:bg-brick-700",
+        exito: "bg-green-600 text-[#181513] font-semibold shadow-xs hover:bg-green-700",
       },
       tamano: {
         sm: "h-8 px-3 text-meta",

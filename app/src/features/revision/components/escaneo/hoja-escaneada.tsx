@@ -38,10 +38,10 @@ interface HojaEscaneadaProps {
 }
 
 const COLORES: Record<TonoResaltado, string> = {
-  petrol: "#2563eb",
-  amber: "#d97706",
-  brick: "#dc2626",
-  green: "#16a34a",
+  petrol: "#dcae6e",
+  amber: "#f59e0b",
+  brick: "#ef4444",
+  green: "#34d399",
 };
 
 export function HojaEscaneada({

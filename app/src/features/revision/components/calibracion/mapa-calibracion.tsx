@@ -79,7 +79,7 @@ export function MapaCalibracion({ mapa, reporte }: MapaCalibracionProps) {
                 className={[
                   "h-9 px-3 text-meta font-medium transition-colors duration-150",
                   pagina === numero
-                    ? "bg-petrol-600 text-paper"
+                    ? "bg-petrol-600 text-[#181513] font-semibold shadow-xs"
                     : "bg-raised text-muted hover:bg-sunken",
                 ].join(" ")}
               >

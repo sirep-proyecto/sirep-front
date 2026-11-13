@@ -183,7 +183,7 @@ export function TablaReportes({ reportes, ruta }: TablaReportesProps) {
               type="button"
               onClick={() => setPaginaActual((p) => Math.max(1, p - 1))}
               disabled={paginaSegura === 1}
-              className="cursor-pointer inline-flex h-8 items-center gap-1 rounded-md px-2.5 text-meta font-medium text-muted transition-colors hover:bg-sunken hover:text-ink disabled:pointer-events-none disabled:opacity-40"
+              className="cursor-pointer inline-flex h-8 items-center gap-1 rounded-md px-2.5 text-meta font-medium text-muted transition-colors hover:bg-sunken hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
               aria-label="Página anterior"
             >
               <ChevronLeft className="size-4" aria-hidden="true" />
@@ -214,7 +214,7 @@ export function TablaReportes({ reportes, ruta }: TablaReportesProps) {
                     className={[
                       "cursor-pointer flex size-8 items-center justify-center rounded-md text-meta font-medium transition-colors",
                       esActiva
-                        ? "bg-petrol-600 text-paper shadow-xs font-semibold"
+                        ? "bg-petrol-600 text-[#181513] shadow-xs font-semibold"
                         : "text-muted hover:bg-sunken hover:text-ink",
                     ].join(" ")}
                   >
@@ -228,7 +228,7 @@ export function TablaReportes({ reportes, ruta }: TablaReportesProps) {
               type="button"
               onClick={() => setPaginaActual((p) => Math.min(totalPaginas, p + 1))}
               disabled={paginaSegura === totalPaginas}
-              className="cursor-pointer inline-flex h-8 items-center gap-1 rounded-md px-2.5 text-meta font-medium text-muted transition-colors hover:bg-sunken hover:text-ink disabled:pointer-events-none disabled:opacity-40"
+              className="cursor-pointer inline-flex h-8 items-center gap-1 rounded-md px-2.5 text-meta font-medium text-muted transition-colors hover:bg-sunken hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
               aria-label="Página siguiente"
             >
               <span>Siguiente</span>

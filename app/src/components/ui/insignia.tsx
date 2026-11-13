@@ -34,12 +34,12 @@ const variantes = cva(
       },
     },
     compoundVariants: [
-      // El tono sólido se reserva para cifras: fondo pleno, texto en papel.
-      { solido: true, tono: "neutral", class: "border-transparent bg-ink text-paper" },
-      { solido: true, tono: "petrol", class: "border-transparent bg-petrol-600 text-paper" },
-      { solido: true, tono: "amber", class: "border-transparent bg-amber-600 text-paper" },
-      { solido: true, tono: "brick", class: "border-transparent bg-brick-600 text-paper" },
-      { solido: true, tono: "green", class: "border-transparent bg-green-600 text-paper" },
+      // El tono sólido se reserva para cifras: fondo pleno
+      { solido: true, tono: "neutral", class: "border-transparent bg-ink text-[#181513] font-semibold" },
+      { solido: true, tono: "petrol", class: "border-transparent bg-petrol-600 text-[#181513] font-semibold" },
+      { solido: true, tono: "amber", class: "border-transparent bg-amber-600 text-[#181513] font-semibold" },
+      { solido: true, tono: "brick", class: "border-transparent bg-brick-600 text-white font-semibold" },
+      { solido: true, tono: "green", class: "border-transparent bg-green-600 text-[#181513] font-semibold" },
     ],
     defaultVariants: {
       tono: "neutral",

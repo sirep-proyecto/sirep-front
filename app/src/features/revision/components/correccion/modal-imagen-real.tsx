@@ -51,7 +51,7 @@ export function ModalImagenReal({
       {/* Barra superior del visor */}
       <header className="flex h-14 items-center justify-between border-b border-paper/10 bg-raised/80 px-4 text-paper backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <span className="flex size-8 items-center justify-center rounded-xs bg-petrol-700/80 text-paper">
+          <span className="flex size-8 items-center justify-center rounded-xs bg-petrol-600 text-[#181513] shadow-xs">
             <Eye className="size-4" aria-hidden="true" />
           </span>
           <div>

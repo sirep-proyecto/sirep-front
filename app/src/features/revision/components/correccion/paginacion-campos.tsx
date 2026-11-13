@@ -33,7 +33,7 @@ function paginasVisibles(actual: number, total: number): (number | null)[] {
 }
 
 const baseBoton =
-    "inline-flex size-8 items-center justify-center rounded-sm text-meta font-medium transition-[background-color,color,transform] duration-150 ease-[var(--ease-salida)] active:scale-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-petrol-600 disabled:pointer-events-none disabled:opacity-40";
+    "cursor-pointer inline-flex size-8 items-center justify-center rounded-sm text-meta font-medium transition-[background-color,color,transform] duration-150 ease-[var(--ease-salida)] active:scale-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-petrol-600 disabled:cursor-not-allowed disabled:opacity-40";
 
 export function PaginacionCampos({
     pagina,
@@ -90,7 +90,7 @@ export function PaginacionCampos({
                                 baseBoton,
                                 "font-mono",
                                 p === pagina
-                                    ? "bg-petrol-600 text-paper shadow-xs"
+                                    ? "bg-petrol-600 text-[#181513] font-semibold shadow-xs"
                                     : "text-muted hover:bg-sunken hover:text-ink",
                             ].join(" ")}
                         >
