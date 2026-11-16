@@ -78,6 +78,18 @@ export interface Reporte {
   creado_en: string;
   actualizado_en: string;
   completado_en: string | null;
+  /** Estado del reporte en SIREP: `aprobado_rptech` cuando RP-TECH lo guardó, `observado` si lo rechazó. */
+  estado_reporte?: string | null;
+  /** Id del reporte en RP-TECH; solo existe cuando RP-TECH confirmó que lo guardó. */
+  rptech_id?: string | null;
+  /** Último rechazo o fallo del envío a RP-TECH, con el motivo por campo. */
+  rptech_error?: ErrorRptech | null;
+  rptech_enviado_en?: string | null;
+}
+
+export interface ErrorRptech {
+  codigo: string;
+  detalle: unknown;
 }
 
 /**

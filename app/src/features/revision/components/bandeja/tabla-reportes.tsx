@@ -17,6 +17,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { CeldaDudosos } from "@/features/revision/components/bandeja/celda-dudosos";
 import { EtiquetaEstado } from "@/features/revision/components/comunes/etiqueta-estado";
 import { EtiquetaOrigen } from "@/features/revision/components/comunes/etiqueta-origen";
+import { EtiquetaRptech } from "@/features/revision/components/comunes/etiqueta-rptech";
 import {
   formatearFecha,
   formatearNumeroReporte,
@@ -82,7 +83,10 @@ function FilaReporte({ reporte, ruta }: FilaReporteProps) {
         <EtiquetaEstado estado={estado} />
       </td>
       <td className={CLASE_CELDA}>
-        <EtiquetaOrigen origen={origen} />
+        <div className="flex flex-wrap items-center gap-1.5">
+          <EtiquetaOrigen origen={origen} />
+          <EtiquetaRptech reporte={reporte} />
+        </div>
       </td>
       <td className={CLASE_CELDA}>
         <CeldaDudosos campos={campos} />

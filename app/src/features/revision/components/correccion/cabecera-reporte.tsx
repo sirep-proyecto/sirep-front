@@ -9,6 +9,7 @@ import { ScanLine } from "lucide-react";
 
 import { EtiquetaEstado } from "@/features/revision/components/comunes/etiqueta-estado";
 import { EtiquetaOrigen } from "@/features/revision/components/comunes/etiqueta-origen";
+import { EtiquetaRptech } from "@/features/revision/components/comunes/etiqueta-rptech";
 import {
     formatearFecha,
     formatearFechaHora,
@@ -32,6 +33,7 @@ export function CabeceraReporte({ reporte }: CabeceraReporteProps) {
                 <span className="h-5 w-px bg-line" aria-hidden="true" />
                 <EtiquetaEstado estado={reporte.estado} />
                 <EtiquetaOrigen origen={reporte.origen} />
+                <EtiquetaRptech reporte={reporte} />
                 <p className="ml-auto flex items-center gap-1.5 text-micro text-faint">
                     <ScanLine className="size-3.5 shrink-0" aria-hidden="true" />
                     {pluralizar(reporte.escaneo.paginas, "página", "páginas")} · recibido{" "}

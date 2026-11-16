@@ -11,6 +11,7 @@ import Link from "next/link";
 import { CeldaDudosos } from "@/features/revision/components/bandeja/celda-dudosos";
 import { EtiquetaEstado } from "@/features/revision/components/comunes/etiqueta-estado";
 import { EtiquetaOrigen } from "@/features/revision/components/comunes/etiqueta-origen";
+import { EtiquetaRptech } from "@/features/revision/components/comunes/etiqueta-rptech";
 import {
     formatearFecha,
     formatearNumeroReporte,
@@ -60,6 +61,7 @@ export function ListaTarjetas({ reportes }: ListaTarjetasProps) {
                         <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-line pt-3">
                             <EtiquetaEstado estado={reporte.estado} />
                             <EtiquetaOrigen origen={reporte.origen} />
+                            <EtiquetaRptech reporte={reporte} />
                             <span className="ml-auto font-mono text-meta text-faint">
                                 {formatearFecha(reporte.fecha_reporte)}
                             </span>

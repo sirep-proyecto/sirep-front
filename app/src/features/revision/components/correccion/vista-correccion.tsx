@@ -22,6 +22,7 @@ import {
 import { Boton } from "@/components/ui/boton";
 import { BarraAccionesReporte } from "@/features/revision/components/correccion/barra-acciones-reporte";
 import { CabeceraReporte } from "@/features/revision/components/correccion/cabecera-reporte";
+import { AvisoRptech } from "@/features/revision/components/correccion/aviso-rptech";
 import {
   CargandoRevision,
   ErrorDeCarga,
@@ -115,6 +116,7 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
 
       {/* Cabecera contextual del reporte */}
       <CabeceraReporte reporte={reporte} />
+      <AvisoRptech reporte={reporte} />
 
       {/* Barra de progreso de revisión de campos dudosos */}
       <ProgresoRevision

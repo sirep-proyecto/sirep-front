@@ -10,7 +10,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileSpreadsheet, Inbox, LogOut, Map } from "lucide-react";
+import { FileSpreadsheet, Inbox, LogOut, Map, Settings } from "lucide-react";
 
 import { Boton } from "@/components/ui/boton";
 import { MOSTRAR_CALIBRACION } from "@/config/entorno";
@@ -58,6 +58,7 @@ export function CabeceraApp() {
   const ruta = usePathname();
   const enBandeja = ruta === "/" || ruta.startsWith("/reportes");
   const enCalibracion = ruta.startsWith("/dev/regiones");
+  const enConfiguracion = ruta.startsWith("/configuracion");
 
   const [usuarioSesion, setUsuarioSesion] = useState<UsuarioActual | null>(
     null,
@@ -103,7 +104,8 @@ export function CabeceraApp() {
           aria-label="SIREP, ir a la bandeja de revisión"
         >
           <Marca />
-          <span className="flex flex-col leading-none">
+          {/* En el celular solo queda el logo: el nombre no cabe junto al menú */}
+          <span className="flex flex-col leading-none max-sm:hidden">
             <span className="text-base font-semibold tracking-tight">
               SIREP
             </span>
@@ -117,7 +119,7 @@ export function CabeceraApp() {
           <>
             <nav
               aria-label="Secciones principales"
-              className="ml-auto flex items-center gap-1"
+              className="ml-auto flex items-center gap-1 max-sm:gap-0"
             >
               <Link
                 href="/"
@@ -137,6 +139,14 @@ export function CabeceraApp() {
                   <span className="max-sm:sr-only">Regiones</span>
                 </Link>
               ) : null}
+              <Link
+                href="/configuracion"
+                aria-current={enConfiguracion ? "page" : undefined}
+                className={clasesEnlace(enConfiguracion)}
+              >
+                <Settings className="size-4" aria-hidden="true" />
+                <span className="max-sm:sr-only">Configuración</span>
+              </Link>
               <Boton
                 variante="secundario"
                 tamano="sm"
@@ -152,7 +162,10 @@ export function CabeceraApp() {
               </Boton>
             </nav>
 
-            <IndicadorEnVivo />
+            {/* En el celular no cabe junto al menú: se oculta para que no haya desplazamiento horizontal */}
+            <div className="max-md:hidden">
+              <IndicadorEnVivo />
+            </div>
 
             <div className="flex items-center gap-2.5 border-l border-line pl-4">
               <span
