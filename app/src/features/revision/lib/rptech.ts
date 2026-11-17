@@ -44,7 +44,7 @@ export const ETIQUETAS_RPTECH: Record<
   },
   por_enviar: {
     etiqueta: "Por enviar",
-    descripcion: "Revisado. Se enviará a RP-TECH en el próximo envío.",
+    descripcion: "Revisado. Envíalo con el botón Enviar o con Enviar completados.",
     tono: "neutral",
   },
 };

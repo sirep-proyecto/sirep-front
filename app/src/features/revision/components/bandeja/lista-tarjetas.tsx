@@ -8,6 +8,7 @@
 
 import Link from "next/link";
 
+import { BotonEnviarRptech } from "@/features/revision/components/bandeja/boton-enviar-rptech";
 import { CeldaDudosos } from "@/features/revision/components/bandeja/celda-dudosos";
 import { EtiquetaEstado } from "@/features/revision/components/comunes/etiqueta-estado";
 import { EtiquetaOrigen } from "@/features/revision/components/comunes/etiqueta-origen";
@@ -20,27 +21,36 @@ import type { Reporte } from "@/features/revision/types/dominio";
 
 interface ListaTarjetasProps {
     reportes: readonly Reporte[];
+    enviando?: ReadonlySet<string>;
+    onEnviar?: (numero: string) => void;
 }
 
-export function ListaTarjetas({ reportes }: ListaTarjetasProps) {
+export function ListaTarjetas({ reportes, enviando = new Set(), onEnviar }: ListaTarjetasProps) {
     return (
         <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:hidden">
             {reportes.map((reporte) => (
                 <li key={reporte.id} className="min-w-0">
-                    <Link
-                        href={`/reportes/${reporte.numero_reporte}`}
-                        aria-label={`Abrir el reporte N° ${reporte.numero_reporte} de ${reporte.cliente}`}
+                    {/*
+                     * El enlace se extiende sobre la tarjeta con `::after` y el
+                     * botón de envío queda por encima (`z-10`): un botón no
+                     * puede ir dentro de un enlace.
+                     */}
+                    <div
                         className={[
-                            "flex h-full flex-col gap-3 rounded-md border border-line bg-raised p-4",
+                            "relative flex h-full flex-col gap-3 rounded-md border border-line bg-raised p-4",
                             "transition-colors duration-150 ease-[var(--ease-salida)]",
                             "hover:border-line-strong hover:bg-sunken",
                         ].join(" ")}
                     >
                         <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                                <p className="font-mono text-meta font-medium text-petrol-700">
+                                <Link
+                                    href={`/reportes/${reporte.numero_reporte}`}
+                                    aria-label={`Abrir el reporte N° ${reporte.numero_reporte} de ${reporte.cliente}`}
+                                    className="rounded-xs font-mono text-meta font-medium text-petrol-700 after:absolute after:inset-0 after:rounded-md after:content-[''] focus-visible:after:outline-2 focus-visible:after:outline-offset-[-2px] focus-visible:after:outline-petrol-600"
+                                >
                                     {formatearNumeroReporte(reporte.numero_reporte)}
-                                </p>
+                                </Link>
                                 <p className="mt-1 truncate text-base font-medium text-ink">
                                     {reporte.cliente}
                                 </p>
@@ -62,11 +72,20 @@ export function ListaTarjetas({ reportes }: ListaTarjetasProps) {
                             <EtiquetaEstado estado={reporte.estado} />
                             <EtiquetaOrigen origen={reporte.origen} />
                             <EtiquetaRptech reporte={reporte} />
-                            <span className="ml-auto font-mono text-meta text-faint">
-                                {formatearFecha(reporte.fecha_reporte)}
+                            <span className="ml-auto flex items-center gap-2">
+                                <span className="font-mono text-meta text-faint">
+                                    {formatearFecha(reporte.fecha_reporte)}
+                                </span>
+                                {onEnviar ? (
+                                    <BotonEnviarRptech
+                                        reporte={reporte}
+                                        enviando={enviando.has(reporte.numero_reporte)}
+                                        onEnviar={onEnviar}
+                                    />
+                                ) : null}
                             </span>
                         </div>
-                    </Link>
+                    </div>
                 </li>
             ))}
         </ul>
