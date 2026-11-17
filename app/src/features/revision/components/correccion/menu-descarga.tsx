@@ -20,6 +20,7 @@ interface MenuDescargaProps {
 export function MenuDescarga({ onDescargar, className }: MenuDescargaProps) {
   const [abierto, setAbierto] = useState(false);
   const [descargando, setDescargando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const contenedorRef = useRef<HTMLDivElement>(null);
   const temporizadorCierre = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -43,9 +44,16 @@ export function MenuDescarga({ onDescargar, className }: MenuDescargaProps) {
 
   const handleSeleccionar = async (formato: FormatoDescarga) => {
     setAbierto(false);
+    setError(null);
     try {
       setDescargando(true);
       await onDescargar(formato);
+    } catch (e) {
+      setError(
+        e instanceof Error && e.message
+          ? e.message
+          : "No se pudo completar la descarga.",
+      );
     } finally {
       setDescargando(false);
     }
@@ -110,6 +118,15 @@ export function MenuDescarga({ onDescargar, className }: MenuDescargaProps) {
         />
       </Boton>
 
+      {error ? (
+        <p
+          role="alert"
+          className="absolute right-0 top-full z-40 mt-1 w-64 rounded-md border border-line bg-raised p-2 text-micro text-ink shadow-lift"
+        >
+          {error}
+        </p>
+      ) : null}
+
       {abierto ? (
         <div
           role="menu"
@@ -129,7 +146,7 @@ export function MenuDescarga({ onDescargar, className }: MenuDescargaProps) {
             <FileText className="mt-0.5 size-4 shrink-0 text-petrol-600" aria-hidden="true" />
             <div>
               <p className="font-medium">PDF (.pdf)</p>
-              <p className="text-micro text-muted">Documento formal en blanco y negro</p>
+              <p className="text-micro text-muted">Mismo formato que el reporte técnico impreso</p>
             </div>
           </button>
 

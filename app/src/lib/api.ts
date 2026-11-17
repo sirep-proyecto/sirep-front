@@ -225,6 +225,50 @@ export async function descargarExcelReportes(
 }
 
 /**
+ * Pide al backend el PDF del reporte (mismo formato que el reporte técnico de RP-TECH,
+ * con los valores ya corregidos) y lo devuelve como Blob. Falla con `ApiError` si el
+ * servidor responde con error, para que quien llama pueda avisar a la persona.
+ */
+export async function obtenerPdfReporte(numero: string): Promise<Blob> {
+  const token = obtenerTokenSesion();
+  const url = `${API_BASE_URL}/reportes/${encodeURIComponent(numero)}/pdf`;
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: "GET",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  } catch (error) {
+    throw new ApiError(
+      error instanceof Error
+        ? `Error de red al descargar el PDF: ${error.message}`
+        : "Error de red al descargar el PDF",
+      0,
+    );
+  }
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      cerrarSesion();
+    }
+    let detalle = "";
+    try {
+      const cuerpo = (await response.json()) as { message?: unknown };
+      if (typeof cuerpo?.message === "string") detalle = cuerpo.message;
+    } catch {
+      // El cuerpo no es JSON: se usa el mensaje genérico.
+    }
+    throw new ApiError(
+      detalle || `No se pudo generar el PDF (HTTP ${response.status})`,
+      response.status,
+    );
+  }
+
+  return response.blob();
+}
+
+/**
  * Verifica la conectividad con el backend consultando `GET /health`.
  * Captura errores de red o timeout y retorna un resultado seguro o lanza según se requiera.
  */
