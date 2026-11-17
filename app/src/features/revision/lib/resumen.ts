@@ -29,11 +29,11 @@ function esMismoDiaLocal(iso: string, dia: Date): boolean {
 
 /**
  * `hoy` es opcional para que las pruebas puedan fijar el día; en producción
- * siempre es la fecha del sistema.
+ * siempre es la fecha del sistema (se evalúa en cada llamada, no al cargar el módulo).
  */
 export function calcularResumenBandeja(
     reportes: readonly Reporte[],
-    hoy: Date = new Date("2026-11-02T12:00:00Z"),
+    hoy: Date = new Date(),
 ): ResumenBandeja {
     return {
         // Pendiente es todo lo que todavía espera trabajo del técnico: cualquier
