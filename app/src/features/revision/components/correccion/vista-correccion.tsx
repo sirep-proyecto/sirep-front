@@ -98,7 +98,7 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
     if (formato === "markdown") {
       descargarReporteMarkdown(reporte);
     } else if (formato === "pdf") {
-      descargarReportePDF(reporte);
+      await descargarReportePDF(reporte);
     } else if (formato === "ambos") {
       await descargarReporteAmbos(reporte);
     }

@@ -1,10 +1,12 @@
 /**
- * Responsabilidad: orquestar la descarga de transcripciones en Markdown y PDF
- * en el cliente mediante Blobs y disparadores de enlace temporal.
+ * Responsabilidad: orquestar la descarga de transcripciones: el Markdown se arma
+ * en el cliente y el PDF (formato del reporte técnico de RP-TECH) lo genera el
+ * backend con los valores ya corregidos; ambos se guardan mediante Blobs y
+ * un enlace temporal.
  */
 
 import { generarMarkdownReporte } from "./serializador-markdown";
-import { generarPDFReporte } from "./generador-pdf";
+import { obtenerPdfReporte } from "@/lib/api";
 import type { ReporteVista } from "@/features/revision/types/dominio";
 
 export function descargarBlob(blob: Blob, nombreArchivo: string): void {
@@ -25,15 +27,17 @@ export function descargarReporteMarkdown(reporte: ReporteVista): void {
   descargarBlob(blob, `Reporte_${numero}.md`);
 }
 
-export function descargarReportePDF(reporte: ReporteVista): void {
-  const doc = generarPDFReporte(reporte);
-  const numero = reporte.numero_reporte || "reporte";
-  doc.save(`Reporte_${numero}.pdf`);
+/** Descarga el PDF generado por el backend. Lanza `ApiError` si el servidor falla. */
+export async function descargarReportePDF(reporte: ReporteVista): Promise<void> {
+  const numero = reporte.numero_reporte || reporte.numero_talonario;
+  if (!numero) throw new Error("El reporte no tiene número para generar el PDF.");
+  const blob = await obtenerPdfReporte(numero);
+  descargarBlob(blob, `Reporte_${numero}.pdf`);
 }
 
 export async function descargarReporteAmbos(reporte: ReporteVista): Promise<void> {
   // Primero descargamos el PDF
-  descargarReportePDF(reporte);
+  await descargarReportePDF(reporte);
 
   // Pequeña pausa asíncrona para que el navegador no bloquee la segunda descarga
   await new Promise((resolve) => setTimeout(resolve, 350));
