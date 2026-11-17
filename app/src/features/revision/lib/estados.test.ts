@@ -69,4 +69,18 @@ describe("derivarEstadoReporte", () => {
       ),
     ).toBe("procesado");
   });
+
+  it("un campo omitido cuenta como intervención y no deja pendientes", () => {
+    expect(
+      derivarEstadoReporte([campo("omitido"), campo("auto", "fecha")], {
+        procesado: true,
+      }),
+    ).toBe("completo");
+    expect(
+      derivarEstadoReporte(
+        [campo("omitido"), campo("pendiente", "fecha")],
+        { procesado: true },
+      ),
+    ).toBe("en_revision");
+  });
 });

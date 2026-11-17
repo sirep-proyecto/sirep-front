@@ -1,13 +1,13 @@
 /**
- * Responsabilidad: contar dudosos, resolver la navegación entre campos
- * pendientes y agruparlos para la vista de corrección.
+ * Responsabilidad: contar dudosos y resolver la navegación entre campos
+ * pendientes. La agrupación por secciones y tarjetas vive en `lib/grupos.ts`.
  * Existe separado de los componentes porque es la lógica que define el ahorro
  * real del producto: si esta cuenta se equivoca, el técnico revisa de más o de
  * menos.
  */
 
-import { ORDEN_CAMPOS, SECCIONES_FORMULARIO } from "@/config/campos-formulario";
-import type { IdCampo, SeccionFormulario } from "@/features/revision/types/campos";
+import { ORDEN_CAMPOS } from "@/config/campos-formulario";
+import type { IdCampo } from "@/features/revision/types/campos";
 import type {
     CampoReporte,
     CampoVista,
@@ -37,7 +37,8 @@ export function fueResueltoPorPersona(
     return (
         campo.estado_revision === "confirmado" ||
         campo.estado_revision === "corregido" ||
-        campo.estado_revision === "ilegible"
+        campo.estado_revision === "ilegible" ||
+        campo.estado_revision === "omitido"
     );
 }
 
@@ -60,6 +61,7 @@ export interface ResumenDisposiciones {
     confirmados: number;
     corregidos: number;
     ilegibles: number;
+    omitidos: number;
 }
 
 export function resumirDisposiciones(
@@ -71,6 +73,8 @@ export function resumirDisposiciones(
         corregidos: campos.filter((campo) => campo.estado_revision === "corregido")
             .length,
         ilegibles: campos.filter((campo) => campo.estado_revision === "ilegible")
+            .length,
+        omitidos: campos.filter((campo) => campo.estado_revision === "omitido")
             .length,
     };
 }
@@ -100,51 +104,6 @@ export function siguienteCampoPendiente(
     const siguiente =
         (indiceActual + direccion + pendientes.length) % pendientes.length;
     return pendientes[siguiente];
-}
-
-export interface GrupoCampos {
-    seccion: SeccionFormulario;
-    campos: CampoVista[];
-    pendientes: number;
-}
-
-/**
- * Agrupa por sección con los pendientes primero, tanto entre secciones como
- * dentro de cada una. En modo "solo dudosos" se omiten los campos automáticos,
- * que son la mayoría del formulario.
- */
-export function agruparCampos(
-    campos: readonly CampoVista[],
-    opciones: { soloDudosos?: boolean } = {},
-): GrupoCampos[] {
-    const visibles = opciones.soloDudosos
-        ? campos.filter((campo) => esDudoso(campo))
-        : campos;
-
-    return SECCIONES_FORMULARIO.map((seccion) => {
-        const delGrupo = visibles
-            .filter((campo) => campo.definicion.seccion === seccion.id)
-            .sort((a, b) => {
-                const pendienteA = requiereRevision(a) ? 0 : 1;
-                const pendienteB = requiereRevision(b) ? 0 : 1;
-                if (pendienteA !== pendienteB) return pendienteA - pendienteB;
-                return ORDEN_CAMPOS[a.id] - ORDEN_CAMPOS[b.id];
-            });
-
-        return {
-            seccion,
-            campos: delGrupo,
-            pendientes: delGrupo.filter(requiereRevision).length,
-        };
-    })
-        .filter((grupo) => grupo.campos.length > 0)
-        .sort((a, b) => {
-            if (a.pendientes !== b.pendientes) return b.pendientes - a.pendientes;
-            return (
-                SECCIONES_FORMULARIO.findIndex((s) => s.id === a.seccion.id) -
-                SECCIONES_FORMULARIO.findIndex((s) => s.id === b.seccion.id)
-            );
-        });
 }
 
 export function camposPendientesOrdenados(

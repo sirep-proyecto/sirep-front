@@ -18,6 +18,7 @@ import {
     Info,
     PencilLine,
     RotateCcw,
+    SkipForward,
     X,
 } from "lucide-react";
 
@@ -32,6 +33,7 @@ import { RecorteEscaneo } from "@/features/revision/components/escaneo/recorte";
 import { valorVigente } from "@/features/revision/lib/campos";
 import { fueResueltoPorPersona, requiereRevision } from "@/features/revision/lib/dudosos";
 import { detalleDuda } from "@/features/revision/lib/detalle-duda";
+import { esSinLectura, type PasoLote } from "@/features/revision/lib/grupos";
 import { formatearFechaHora } from "@/features/revision/lib/formato";
 import type {
     CampoVista,
@@ -59,7 +61,10 @@ export interface AccionesCampo {
     confirmar: (campo: IdCampo) => void;
     corregir: (campo: IdCampo, valor: string) => Promise<boolean>;
     ilegible: (campo: IdCampo) => void;
+    omitir: (campo: IdCampo) => void;
     reabrir: (campo: IdCampo) => void;
+    /** Varios pasos, uno por campo, para las tarjetas agrupadas y "Confirmar sección". */
+    aplicarLote: (pasos: PasoLote[]) => Promise<boolean>;
     descartarError: () => void;
 }
 
@@ -80,6 +85,7 @@ export interface TarjetaCampoProps {
     onConfirmar: () => void;
     onCorregir: (valor: string) => Promise<boolean>;
     onIlegible: () => void;
+    onOmitir: () => void;
     onReabrir: () => void;
     onDescartarError: () => void;
 }
@@ -96,6 +102,7 @@ export function TarjetaCampo({
     onConfirmar,
     onCorregir,
     onIlegible,
+    onOmitir,
     onReabrir,
     onDescartarError,
 }: TarjetaCampoProps) {
@@ -105,13 +112,20 @@ export function TarjetaCampo({
     const automatico = campo.estado_revision === "auto";
     const pendiente = requiereRevision(campo);
     const resuelto = fueResueltoPorPersona(campo);
+    const omitido = campo.estado_revision === "omitido";
+    // Si el modelo no leyó nada, la pregunta útil es "¿está vacío en el papel?":
+    // la acción principal es omitir, y escribir el valor pasa a ser la alternativa.
+    const sinLectura = esSinLectura(campo);
+    const preguntarVacio = pendiente && sinLectura;
     const valorModelo = campo.valor_modelo?.trim() ? campo.valor_modelo : null;
     const vigente = valorVigente(campo);
     const tieneValor = (vigente ?? "").trim() !== "";
     const tono = tonoDeCampo(campo);
     const tamanio = amplio ? "lg" : "sm";
     const duda =
-        campo.estado_revision === "pendiente" ? detalleDuda(campo) : null;
+        campo.estado_revision === "pendiente" && !preguntarVacio
+            ? detalleDuda(campo)
+            : null;
 
     const anchoRecorte = amplio ? "w-full" : "w-28";
     const apilar = amplio ? "flex-col" : "";
@@ -123,10 +137,13 @@ export function TarjetaCampo({
             aria-busy={enCurso || undefined}
             onClick={onSeleccionar}
             onFocus={onSeleccionar}
+            data-campos={campo.id}
             className={twMerge(
                 "rounded-md border border-line border-l-4 bg-raised p-3",
                 "transition-[box-shadow] duration-150 ease-[var(--ease-salida)]",
                 BORDE_POR_TONO[tono],
+                // Omitido atenúa la tarjeta: ya está resuelta y no debe competir con lo pendiente.
+                omitido && "border-l-line-strong opacity-70",
                 activo && "shadow-lift ring-1 ring-petrol-600",
                 !modoEdicion ? "cursor-not-allowed select-none" : "cursor-pointer",
             )}
@@ -173,7 +190,7 @@ export function TarjetaCampo({
                         <p className="text-micro uppercase tracking-label text-faint">
                             Lectura del modelo
                         </p>
-                        <IndicadorConfianza campo={campo} />
+                        {omitido ? null : <IndicadorConfianza campo={campo} />}
                     </div>
                     <p
                         className={twMerge(
@@ -183,10 +200,20 @@ export function TarjetaCampo({
                             valorModelo &&
                             "text-faint line-through",
                             !valorModelo && "text-faint",
+                            (omitido || !valorModelo) && "italic",
                         )}
                     >
-                        {valorModelo ?? (campo.no_leido ? "Sin lectura" : "En blanco en el papel")}
+                        {omitido
+                            ? "Omitido · vacío en el papel"
+                            : (valorModelo ??
+                              (campo.no_leido ? "Sin lectura" : "En blanco en el papel"))}
                     </p>
+
+                    {preguntarVacio ? (
+                        <p className="mt-1.5 text-meta leading-snug text-muted">
+                            El modelo no leyó nada. ¿Está vacío en el papel?
+                        </p>
+                    ) : null}
 
                     {duda ? (
                         <div className="mt-2 flex items-start gap-2 rounded-xs border border-amber-200 bg-amber-50 px-2.5 py-1.5">
@@ -242,6 +269,15 @@ export function TarjetaCampo({
                         </div>
                     ) : null}
 
+                    {omitido && campo.revisado_por ? (
+                        <p className="mt-2 text-micro text-muted">
+                            Omitido por {campo.revisado_por}
+                            {campo.revisado_en
+                                ? ` · ${formatearFechaHora(campo.revisado_en)}`
+                                : ""}
+                        </p>
+                    ) : null}
+
                     {campo.estado_revision === "ilegible" ? (
                         <div className="mt-2 rounded-xs border border-brick-200 bg-brick-50 px-2 py-1.5">
                             <p className="flex items-center gap-1.5 text-micro uppercase tracking-label text-brick-700">
@@ -277,7 +313,21 @@ export function TarjetaCampo({
 
             {!editando && pendiente ? (
                 <div className={twMerge("mt-3 flex flex-wrap gap-2", apilar)}>
-                    {tieneValor ? (
+                    {preguntarVacio ? (
+                        <Boton
+                            variante="primario"
+                            tamano={tamanio}
+                            onClick={onOmitir}
+                            disabled={enCurso || !modoEdicion}
+                            className={twMerge(
+                                amplio ? "w-full" : "min-w-52 flex-1",
+                                !modoEdicion && "cursor-not-allowed opacity-50",
+                            )}
+                        >
+                            <SkipForward className="size-4 shrink-0" aria-hidden="true" />
+                            Omitir · está vacío
+                        </Boton>
+                    ) : (
                         <Boton
                             variante="exito"
                             tamano={tamanio}
@@ -287,6 +337,49 @@ export function TarjetaCampo({
                         >
                             <CheckCircle2 className="size-4 shrink-0" aria-hidden="true" />
                             Confirmar
+                        </Boton>
+                    )}
+                    <Boton
+                        variante="secundario"
+                        tamano={tamanio}
+                        onClick={() => {
+                            if (modoEdicion) setEditando(true);
+                        }}
+                        disabled={enCurso || !modoEdicion}
+                        className={twMerge(llenar, !modoEdicion && "cursor-not-allowed opacity-50")}
+                    >
+                        <PencilLine className="size-4 shrink-0" aria-hidden="true" />
+                        {preguntarVacio ? "Escribir valor" : "Corregir"}
+                    </Boton>
+                    <Boton
+                        variante="fantasma"
+                        tamano={tamanio}
+                        onClick={onIlegible}
+                        disabled={enCurso || !modoEdicion}
+                        className={twMerge(
+                            llenar,
+                            "text-brick-700 hover:bg-brick-50 hover:text-brick-700",
+                            !modoEdicion && "cursor-not-allowed opacity-50",
+                        )}
+                    >
+                        <Ban className="size-4 shrink-0" aria-hidden="true" />
+                        {preguntarVacio ? "Ilegible" : "Marcar ilegible"}
+                    </Boton>
+                </div>
+            ) : null}
+
+            {!editando && automatico ? (
+                <div className={twMerge("mt-3 flex flex-wrap gap-2", apilar)}>
+                    {!tieneValor ? (
+                        <Boton
+                            variante="secundario"
+                            tamano={tamanio}
+                            onClick={onOmitir}
+                            disabled={enCurso || !modoEdicion}
+                            className={twMerge(llenar, !modoEdicion && "cursor-not-allowed opacity-50")}
+                        >
+                            <SkipForward className="size-4 shrink-0" aria-hidden="true" />
+                            Omitir · está vacío
                         </Boton>
                     ) : null}
                     <Boton
@@ -318,51 +411,22 @@ export function TarjetaCampo({
                 </div>
             ) : null}
 
-            {!editando && automatico ? (
-                <div className={twMerge("mt-3 flex flex-wrap gap-2", apilar)}>
-                    <Boton
-                        variante="secundario"
-                        tamano={tamanio}
-                        onClick={() => {
-                            if (modoEdicion) setEditando(true);
-                        }}
-                        disabled={enCurso || !modoEdicion}
-                        className={twMerge(llenar, !modoEdicion && "cursor-not-allowed opacity-50")}
-                    >
-                        <PencilLine className="size-4 shrink-0" aria-hidden="true" />
-                        Corregir
-                    </Boton>
-                    <Boton
-                        variante="fantasma"
-                        tamano={tamanio}
-                        onClick={onIlegible}
-                        disabled={enCurso || !modoEdicion}
-                        className={twMerge(
-                            llenar,
-                            "text-brick-700 hover:bg-brick-50 hover:text-brick-700",
-                            !modoEdicion && "cursor-not-allowed opacity-50",
-                        )}
-                    >
-                        <Ban className="size-4 shrink-0" aria-hidden="true" />
-                        Marcar ilegible
-                    </Boton>
-                </div>
-            ) : null}
-
             {!editando && resuelto ? (
                 <div className={twMerge("mt-3 flex flex-wrap gap-2", apilar)}>
-                    <Boton
-                        variante="secundario"
-                        tamano={tamanio}
-                        onClick={() => {
-                            if (modoEdicion) setEditando(true);
-                        }}
-                        disabled={enCurso || !modoEdicion}
-                        className={twMerge(llenar, !modoEdicion && "cursor-not-allowed opacity-50")}
-                    >
-                        <PencilLine className="size-4 shrink-0" aria-hidden="true" />
-                        Corregir
-                    </Boton>
+                    {omitido ? null : (
+                        <Boton
+                            variante="secundario"
+                            tamano={tamanio}
+                            onClick={() => {
+                                if (modoEdicion) setEditando(true);
+                            }}
+                            disabled={enCurso || !modoEdicion}
+                            className={twMerge(llenar, !modoEdicion && "cursor-not-allowed opacity-50")}
+                        >
+                            <PencilLine className="size-4 shrink-0" aria-hidden="true" />
+                            Corregir
+                        </Boton>
+                    )}
                     <Boton
                         variante="fantasma"
                         tamano={tamanio}
@@ -371,7 +435,7 @@ export function TarjetaCampo({
                         className={twMerge(llenar, !modoEdicion && "cursor-not-allowed opacity-50")}
                     >
                         <RotateCcw className="size-4 shrink-0" aria-hidden="true" />
-                        Reabrir
+                        {omitido ? "Deshacer" : "Reabrir"}
                     </Boton>
                 </div>
             ) : null}

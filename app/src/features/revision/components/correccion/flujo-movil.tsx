@@ -58,6 +58,7 @@ export function FlujoMovil({
                 onConfirmar={() => acciones.confirmar(campo.id)}
                 onCorregir={(valor) => acciones.corregir(campo.id, valor)}
                 onIlegible={() => acciones.ilegible(campo.id)}
+                onOmitir={() => acciones.omitir(campo.id)}
                 onReabrir={() => acciones.reabrir(campo.id)}
                 onDescartarError={acciones.descartarError}
             />

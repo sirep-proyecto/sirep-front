@@ -29,6 +29,7 @@ export function tonoDeCampo(campo: CampoReporte): TonoResaltado {
             return campo.no_leido || campo.confianza === "baja" ? "brick" : "amber";
         case "confirmado":
         case "corregido":
+        case "omitido":
             return "green";
         case "ilegible":
             return "brick";

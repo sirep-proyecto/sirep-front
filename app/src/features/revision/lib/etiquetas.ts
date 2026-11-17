@@ -80,6 +80,11 @@ export const ETIQUETAS_REVISION: Record<
         descripcion: "Una persona revisó el recorte y no pudo leerlo.",
         tono: "brick",
     },
+    omitido: {
+        etiqueta: "Omitido",
+        descripcion: "Una persona confirmó que el campo está vacío en el papel.",
+        tono: "neutral",
+    },
 };
 
 export const ETIQUETAS_CONFIANZA: Record<Confianza, DescripcionSemantica> = {

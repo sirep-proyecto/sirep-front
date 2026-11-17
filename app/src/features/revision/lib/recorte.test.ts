@@ -5,7 +5,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { calcularRecorte } from "./recorte";
+import { calcularRecorte, unirRegiones } from "./recorte";
 
 const MAPA = { ancho_pagina: 1000, alto_pagina: 1414 };
 
@@ -86,5 +86,28 @@ describe("calcularRecorte", () => {
                 { padding: 0.8 },
             ),
         ).toThrow(RangeError);
+    });
+});
+
+describe("unirRegiones", () => {
+    it("devuelve la región mínima que contiene a todas", () => {
+        const union = unirRegiones([
+            { x: 0.1, y: 0.2, ancho: 0.2, alto: 0.1, pagina: 1 },
+            { x: 0.5, y: 0.25, ancho: 0.3, alto: 0.2, pagina: 1 },
+        ]);
+        expect(union?.x).toBeCloseTo(0.1);
+        expect(union?.y).toBeCloseTo(0.2);
+        expect(union?.ancho).toBeCloseTo(0.7);
+        expect(union?.alto).toBeCloseTo(0.25);
+        expect(union?.pagina).toBe(1);
+    });
+
+    it("ignora las regiones de otra página y devuelve null sin regiones", () => {
+        const union = unirRegiones([
+            { x: 0.1, y: 0.1, ancho: 0.1, alto: 0.1, pagina: 1 },
+            { x: 0.8, y: 0.8, ancho: 0.1, alto: 0.1, pagina: 2 },
+        ]);
+        expect(union?.ancho).toBeCloseTo(0.1);
+        expect(unirRegiones([])).toBeNull();
     });
 });

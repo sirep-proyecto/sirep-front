@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { generarMarkdownReporte } from "./serializador-markdown";
-import { generarPDFReporte } from "./generador-pdf";
+import { descargarReportePDF } from "./descargas";
+import * as api from "@/lib/api";
 import type { ReporteVista } from "@/features/revision/types/dominio";
 import { MAPA_POR_DEFECTO, obtenerMapa } from "@/config/regiones";
 import { CAMPOS_FORMULARIO } from "@/config/campos-formulario";
@@ -54,6 +55,11 @@ function crearReportePrueba(): ReporteVista {
   };
 }
 
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
+
 describe("Exportación de reportes", () => {
   it("genera un markdown estructurado según BACETTO_03.md", () => {
     const reporte = crearReportePrueba();
@@ -71,12 +77,28 @@ describe("Exportación de reportes", () => {
     expect(md).toContain("WhatsApp: 51 943116468");
   });
 
-  it("genera un documento PDF válido con jsPDF", () => {
-    const reporte = crearReportePrueba();
-    const doc = generarPDFReporte(reporte);
+  it("descarga el PDF que genera el backend con el nombre Reporte_<número>.pdf", async () => {
+    const pedir = vi
+      .spyOn(api, "obtenerPdfReporte")
+      .mockResolvedValue(new Blob(["%PDF-1.7"], { type: "application/pdf" }));
+    // El runner corre en node: se simula solo lo que usa la descarga del navegador.
+    const nombres: string[] = [];
+    const enlace = { href: "", download: "", click: () => nombres.push(enlace.download) };
+    vi.stubGlobal("document", {
+      createElement: () => enlace,
+      body: { appendChild: () => undefined, removeChild: () => undefined },
+    });
+    vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:prueba");
+    vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
 
-    expect(doc).toBeDefined();
-    expect(doc.getNumberOfPages()).toBeGreaterThanOrEqual(1);
+    await descargarReportePDF(crearReportePrueba());
+
+    expect(pedir).toHaveBeenCalledWith("001241");
+    expect(nombres).toEqual(["Reporte_001241.pdf"]);
+  });
+
+  it("propaga el error si el backend no pudo generar el PDF", async () => {
+    vi.spyOn(api, "obtenerPdfReporte").mockRejectedValue(new Error("boom"));
+    await expect(descargarReportePDF(crearReportePrueba())).rejects.toThrow("boom");
   });
 });
-

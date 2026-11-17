@@ -1,6 +1,6 @@
 /**
- * Responsabilidad: barra superior del reporte (identificación, modo edición,
- * descarga y visor del escaneo original).
+ * Responsabilidad: barra superior del reporte (identificación, descarga y visor
+ * del escaneo original). El modo edición vive en la cabecera del panel de campos.
  * Existe porque cada revisión se guarda en el servidor al instante: la barra ya
  * no ofrece "Guardar" ni "Revertir" (antes existían porque los datos vivían en
  * memoria) y avisa que el guardado es automático.
@@ -8,7 +8,7 @@
 
 "use client";
 
-import { Check, Eye, FileText, Lock, Unlock, Map } from "lucide-react";
+import { Check, Eye, FileText, Map } from "lucide-react";
 import Link from "next/link";
 
 import { Boton } from "@/components/ui/boton";
@@ -17,8 +17,6 @@ import { MenuDescarga, type FormatoDescarga } from "./menu-descarga";
 interface BarraAccionesReporteProps {
   numeroReporte: string;
   cliente: string;
-  modoEdicion: boolean;
-  onAlternarEdicion: () => void;
   onDescargar?: (formato: FormatoDescarga) => Promise<void> | void;
   onDescargarPDF?: () => void;
   onVerImagenReal: () => void;
@@ -27,8 +25,6 @@ interface BarraAccionesReporteProps {
 export function BarraAccionesReporte({
   numeroReporte,
   cliente,
-  modoEdicion,
-  onAlternarEdicion,
   onDescargar,
   onDescargarPDF,
   onVerImagenReal,
@@ -77,27 +73,6 @@ export function BarraAccionesReporte({
             Ver Regiones
           </Link>
         </Boton>        
-
-        <Boton
-          variante={modoEdicion ? "primario" : "secundario"}
-          tamano="sm"
-          onClick={onAlternarEdicion}
-          aria-pressed={modoEdicion}
-          aria-label={modoEdicion ? "Desactivar modo edición" : "Activar modo edición"}
-          className="gap-1.5"
-        >
-          {modoEdicion ? (
-            <>
-              <Unlock className="size-3.5" aria-hidden="true" />
-              Edición habilitada
-            </>
-          ) : (
-            <>
-              <Lock className="size-3.5" aria-hidden="true" />
-              Editar
-            </>
-          )}
-        </Boton>
 
         <MenuDescarga
           onDescargar={(formato) => {

@@ -31,16 +31,26 @@ import {
 import { ModalImagenReal } from "@/features/revision/components/correccion/modal-imagen-real";
 import { PanelCampos } from "@/features/revision/components/correccion/panel-campos";
 import { ProgresoRevision } from "@/features/revision/components/correccion/progreso-revision";
+import { BotonDescargarCorregido } from "@/features/revision/components/escaneo/boton-descargar-corregido";
 import { HojaEscaneada } from "@/features/revision/components/escaneo/hoja-escaneada";
+import { InterruptorModoVisor } from "@/features/revision/components/escaneo/interruptor-modo-visor";
+import { LienzoEscaneo } from "@/features/revision/components/escaneo/lienzo-escaneo";
+import { ListaCorrecciones } from "@/features/revision/components/escaneo/lista-correcciones";
 import { RecorteEscaneo } from "@/features/revision/components/escaneo/recorte";
 import { calcularRecorte } from "@/features/revision/lib/recorte";
+import {
+  capasDePagina,
+  construirCapas,
+} from "@/features/revision/lib/capas-correccion";
 import {
   descargarReporteAmbos,
   descargarReporteMarkdown,
   descargarReportePDF,
 } from "@/features/revision/lib/descargas";
 import type { FormatoDescarga } from "@/features/revision/components/correccion/menu-descarga";
+import { useModoVisor } from "@/features/revision/hooks/use-modo-visor";
 import { useRevisionReporte } from "@/features/revision/hooks/use-revision-reporte";
+import { useAtajosTeclado } from "@/features/revision/hooks/use-atajos-teclado";
 import type { NumeroPagina } from "@/features/revision/types/regiones";
 
 interface VistaCorreccionProps {
@@ -57,6 +67,22 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
   // El recorte del campo activo es opcional: el resaltado sobre el propio
   // documento ya ubica el campo, así que solo se muestra si se pide con el ojo.
   const [verRecorte, setVerRecorte] = useState(false);
+  // Modo del visor (recordado en localStorage) y capa resaltada desde la lista.
+  const [modoVisor, setModoVisor] = useModoVisor();
+  const [capaResaltada, setCapaResaltada] = useState<string | null>(null);
+
+  // Los atajos de confirmar y omitir respetan el modo edición, igual que los botones.
+  useAtajosTeclado({
+    habilitado: revision.estado === "listo",
+    onSiguiente: () => revision.mover(1),
+    onAnterior: () => revision.mover(-1),
+    onConfirmar: () => {
+      if (modoEdicion) void revision.confirmarCampoActivo();
+    },
+    onOmitir: () => {
+      if (modoEdicion) void revision.omitirCampoActivo();
+    },
+  });
 
   if (revision.estado === "cargando") return <CargandoRevision />;
   if (revision.estado === "no_encontrado")
@@ -71,6 +97,7 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
   if (!revision.reporte) return null;
 
   const reporte = revision.reporte;
+  const capasCorreccion = construirCapas(reporte.campos);
 
   // Cada revisión se guarda en el servidor al instante (ver repositorio-api),
   // así que no hay "guardar" ni "revertir": deshacer es reabrir el campo.
@@ -85,7 +112,7 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
     if (formato === "markdown") {
       descargarReporteMarkdown(reporte);
     } else if (formato === "pdf") {
-      descargarReportePDF(reporte);
+      await descargarReportePDF(reporte);
     } else if (formato === "ambos") {
       await descargarReporteAmbos(reporte);
     }
@@ -108,8 +135,6 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
       <BarraAccionesReporte
         numeroReporte={reporte.numero_reporte}
         cliente={reporte.cliente}
-        modoEdicion={modoEdicion}
-        onAlternarEdicion={() => setModoEdicion((prev) => !prev)}
         onDescargar={handleDescargar}
         onVerImagenReal={() => setModalOriginal(true)}
       />
@@ -141,16 +166,17 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
           className="animar-entrada flex min-h-0 flex-col gap-3 rounded-md border border-line bg-paper p-4 shadow-xs lg:h-full"
         >
           <div className="flex items-center justify-between border-b border-line pb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-micro uppercase tracking-label font-medium text-muted">
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="whitespace-nowrap text-micro uppercase tracking-label font-medium text-muted">
                 Visor de Escaneo
               </span>
-              <span className="rounded-xs bg-sunken px-1.5 py-0.5 font-mono text-micro text-ink">
+              <span className="whitespace-nowrap rounded-xs bg-sunken px-1.5 py-0.5 font-mono text-micro text-ink">
                 Pág. {paginaEscaneo} de {totalPaginas}
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <InterruptorModoVisor modo={modoVisor} onCambiar={setModoVisor} />
               <button
                 type="button"
                 onClick={() => setVerRecorte((v) => !v)}
@@ -182,7 +208,7 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
                 className="gap-1 text-micro"
               >
                 <Maximize2 className="size-3" />
-                Original
+                Ampliar
               </Boton>
 
               <div className="flex items-center rounded-xs border border-line p-0.5">
@@ -283,49 +309,63 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
           <div
             className="scroll-fino relative flex min-h-[420px] w-full items-start justify-center overflow-auto rounded-xs border border-line bg-sunken p-2 lg:min-h-0 lg:flex-1"
           >
-            <div
-              style={{
-                transform: `scale(${zoomNivel})`,
-                transformOrigin: "top center",
-                transition: "transform 150ms ease-out",
-                width: "100%",
-                maxWidth: "600px",
-              }}
-            >
-              <HojaEscaneada
-                mapa={reporte.mapa}
-                pagina={paginaEscaneo}
-                reporte={reporte}
-                resaltado={
-                  revision.campoActivo
-                    ? {
-                      region: revision.campoActivo.region,
-                      etiqueta: revision.campoActivo.definicion.etiqueta,
-                      tono: "amber",
-                    }
-                    : null
-                }
-              />
-            </div>
+            <LienzoEscaneo
+              reporte={reporte}
+              pagina={paginaEscaneo}
+              modo={modoVisor}
+              zoom={zoomNivel}
+              capas={capasCorreccion}
+              resaltado={
+                revision.campoActivo
+                  ? {
+                    region: revision.campoActivo.region,
+                    etiqueta: revision.campoActivo.definicion.etiqueta,
+                    tono: "amber",
+                  }
+                  : null
+              }
+              capaResaltada={capaResaltada}
+              onResaltarCapa={setCapaResaltada}
+            />
           </div>
+
+          {/* Tabla de correcciones y descarga del escaneo corregido */}
+          <ListaCorrecciones
+            capas={capasCorreccion}
+            capaResaltada={capaResaltada}
+            onResaltarCapa={setCapaResaltada}
+            onIrAPagina={setPaginaEscaneo}
+            acciones={
+              <BotonDescargarCorregido
+                urlImagen={reporte.escaneo.paginas_urls[paginaEscaneo - 1] ?? null}
+                capas={capasDePagina(capasCorreccion, paginaEscaneo)}
+                mapa={reporte.mapa}
+                numeroReporte={reporte.numero_reporte}
+                pagina={paginaEscaneo}
+              />
+            }
+          />
         </section>
 
         {/* Panel derecho: Lista de campos con soporte de bloqueo */}
         <div className="animar-lado flex min-h-0 flex-col lg:h-full" style={{ "--retardo": 90 } as CSSProperties}>
           <PanelCampos
             reporte={reporte}
-            grupos={revision.grupos}
+            secciones={revision.secciones}
             soloDudosos={revision.soloDudosos}
             campoActivo={revision.campoActivo}
             enCurso={revision.campoEnCurso !== null}
             errorAccion={revision.errorAccion}
             modoEdicion={modoEdicion}
+            onAlternarEdicion={() => setModoEdicion((prev) => !prev)}
             onCambiarVista={revision.cambiarVista}
             acciones={{
               seleccionar: revision.seleccionar,
               confirmar: (id) => void revision.confirmar(id),
               corregir: revision.corregir,
               ilegible: (id) => void revision.marcarIlegible(id),
+              omitir: (id) => void revision.omitir(id),
+              aplicarLote: revision.aplicarLote,
               reabrir: (id) => void revision.reabrir(id),
               descartarError: revision.descartarError,
             }}
