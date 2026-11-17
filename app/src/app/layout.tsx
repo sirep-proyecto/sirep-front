@@ -5,6 +5,8 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import { CabeceraApp } from "@/components/layout/cabecera-app";
 import { PieApp } from "@/components/layout/pie-app";
 import { ProtectorSesion } from "@/components/auth/protector-sesion";
+import { PanelSubida } from "@/features/revision/components/subida/panel-subida";
+import { ProveedorSubida } from "@/features/revision/providers/subida-contexto";
 import { ProveedorRepositorio } from "@/features/revision/providers/repositorio-contexto";
 
 import "./globals.css";
@@ -47,6 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           Saltar al contenido
         </a>
         <ProveedorRepositorio>
+          <ProveedorSubida>
           <Suspense fallback={null}>
             <CabeceraApp />
           </Suspense>
@@ -54,6 +57,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <ProtectorSesion>{children}</ProtectorSesion>
           </main>
           <PieApp />
+          <PanelSubida />
+          </ProveedorSubida>
         </ProveedorRepositorio>
       </body>
     </html>
