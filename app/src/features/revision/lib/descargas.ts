@@ -7,7 +7,7 @@ import { generarMarkdownReporte } from "./serializador-markdown";
 import { generarPDFReporte } from "./generador-pdf";
 import type { ReporteVista } from "@/features/revision/types/dominio";
 
-function descargarBlob(blob: Blob, nombreArchivo: string): void {
+export function descargarBlob(blob: Blob, nombreArchivo: string): void {
   const url = URL.createObjectURL(blob);
   const enlace = document.createElement("a");
   enlace.href = url;

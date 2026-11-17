@@ -25,7 +25,8 @@ export type EstadoRevisionCampo =
   | "pendiente"
   | "confirmado"
   | "corregido"
-  | "ilegible";
+  | "ilegible"
+  | "omitido";
 
 export interface CampoReporte {
   id: IdCampo;

@@ -6,12 +6,26 @@
  * firmado de Storage (`escaneo.paginas_urls`); si no hay imagen se dice, en lugar
  * de dibujar un formulario inventado que parecería un escaneo.
  *
+ * Encima de la imagen se pueden dibujar las correcciones (`capas`): recuadros
+ * con el valor corregido, calculados en `lib/capas-correccion` con la misma
+ * geometría que usa la descarga en canvas.
+ *
  * La imagen se estira a las dimensiones del mapa (`preserveAspectRatio="none"`)
  * para que las coordenadas normalizadas de las regiones apunten al mismo punto
  * de la hoja en cualquier resolución.
  */
 
+import { useId, useMemo } from "react";
 import { twMerge } from "tailwind-merge";
+
+import {
+  calcularGeometrias,
+  etiquetaAccesibleCapa,
+  FUENTE_MONO,
+  PALETA_CAPAS,
+  type CapaCorreccion,
+  type GeometriaCapa,
+} from "@/features/revision/lib/capas-correccion";
 
 import type { ReporteVista } from "@/features/revision/types/dominio";
 import type {
@@ -34,6 +48,11 @@ interface HojaEscaneadaProps {
   /** Reporte cuyo escaneo se muestra. Sin reporte no hay nada que mostrar. */
   reporte?: ReporteVista | null;
   resaltado?: ResaltadoRegion | null;
+  /** Correcciones a dibujar encima del escaneo (solo las de esta página). */
+  capas?: readonly CapaCorreccion[];
+  /** Capa que se destaca (por hover o foco en la lista de correcciones). */
+  capaResaltada?: string | null;
+  onResaltarCapa?: (id: string | null) => void;
   className?: string;
 }
 
@@ -49,17 +68,25 @@ export function HojaEscaneada({
   pagina,
   reporte = null,
   resaltado = null,
+  capas,
+  capaResaltada = null,
+  onResaltarCapa,
   className,
 }: HojaEscaneadaProps) {
   const ancho = mapa.ancho_pagina;
   const alto = mapa.alto_pagina;
   const url = reporte?.escaneo?.paginas_urls?.[pagina - 1] ?? null;
+  const idTrama = `trama-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  const geometrias = useMemo(
+    () => (capas?.length ? calcularGeometrias(capas, mapa) : []),
+    [capas, mapa],
+  );
 
   return (
     <svg
       viewBox={`0 0 ${ancho} ${alto}`}
       className={twMerge("block h-full w-full", className)}
-      role="img"
+      role="group"
       aria-label={
         reporte
           ? `Escaneo del reporte N° ${reporte.numero_reporte}, página ${pagina}`
@@ -90,6 +117,32 @@ export function HojaEscaneada({
           </text>
         </g>
       )}
+
+      {geometrias.length ? (
+        <>
+          <defs>
+            <pattern
+              id={idTrama}
+              width={9}
+              height={9}
+              patternUnits="userSpaceOnUse"
+              patternTransform="rotate(45)"
+            >
+              <rect width={9} height={9} fill={PALETA_CAPAS.omitido.relleno} />
+              <line x1={0} y1={0} x2={0} y2={9} stroke={PALETA_CAPAS.omitido.trama} strokeWidth={2.5} />
+            </pattern>
+          </defs>
+          {geometrias.map((geometria) => (
+            <CapaDibujada
+              key={geometria.capa.id}
+              geometria={geometria}
+              idTrama={idTrama}
+              resaltada={capaResaltada === geometria.capa.id}
+              onResaltar={onResaltarCapa}
+            />
+          ))}
+        </>
+      ) : null}
 
       {resaltado ? (
         <Resaltado
@@ -163,6 +216,93 @@ function Resaltado({
             fill="#ffffff"
           >
             {texto}
+          </text>
+        </>
+      ) : null}
+    </g>
+  );
+}
+
+function CapaDibujada({
+  geometria,
+  idTrama,
+  resaltada,
+  onResaltar,
+}: {
+  geometria: GeometriaCapa;
+  idTrama: string;
+  resaltada: boolean;
+  onResaltar?: (id: string | null) => void;
+}) {
+  const { capa, x, y, ancho, alto, tamano, interlineado, lineas, insignia } = geometria;
+  const corregida = capa.tipo === "corregido";
+  const paleta = corregida ? PALETA_CAPAS.corregido : PALETA_CAPAS.omitido;
+
+  return (
+    <g
+      role="img"
+      aria-label={etiquetaAccesibleCapa(capa)}
+      tabIndex={0}
+      data-capa={capa.id}
+      className="outline-none"
+      onMouseEnter={() => onResaltar?.(capa.id)}
+      onMouseLeave={() => onResaltar?.(null)}
+      onFocus={() => onResaltar?.(capa.id)}
+      onBlur={() => onResaltar?.(null)}
+    >
+      {resaltada ? (
+        <rect
+          x={x - 6}
+          y={y - 6}
+          width={ancho + 12}
+          height={alto + 12}
+          rx={6}
+          fill={PALETA_CAPAS.resaltado}
+          fillOpacity={0.4}
+          stroke={PALETA_CAPAS.resaltado}
+          strokeWidth={6}
+        />
+      ) : null}
+      <rect
+        x={x}
+        y={y}
+        width={ancho}
+        height={alto}
+        rx={2}
+        fill={corregida ? paleta.relleno : `url(#${idTrama})`}
+        stroke={paleta.borde}
+        strokeWidth={2.5}
+      />
+      <text
+        fontSize={tamano}
+        fill={paleta.texto}
+        fontStyle={corregida ? "normal" : "italic"}
+        style={{ fontFamily: `var(--font-mono), ${FUENTE_MONO}` }}
+      >
+        {lineas.map((linea, indice) => (
+          <tspan
+            key={indice}
+            x={geometria.texto_x}
+            y={geometria.texto_y + indice * interlineado}
+          >
+            {linea}
+          </tspan>
+        ))}
+      </text>
+      {insignia ? (
+        <>
+          <circle cx={insignia.cx} cy={insignia.cy} r={insignia.r} fill={PALETA_CAPAS.insignia.relleno} />
+          <text
+            x={insignia.cx}
+            y={insignia.cy}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize={insignia.r * 1.15}
+            fontWeight={700}
+            fill={PALETA_CAPAS.insignia.texto}
+            style={{ fontFamily: `var(--font-mono), ${FUENTE_MONO}` }}
+          >
+            {capa.numero}
           </text>
         </>
       ) : null}

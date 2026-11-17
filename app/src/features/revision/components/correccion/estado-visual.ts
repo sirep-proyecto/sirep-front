@@ -32,6 +32,8 @@ export function tonoDeCampo(campo: CampoReporte): TonoResaltado {
             return "green";
         case "ilegible":
             return "brick";
+        case "omitido":
+            return "green";
     }
 }
 
