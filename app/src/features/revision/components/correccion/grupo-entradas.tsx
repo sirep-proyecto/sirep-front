@@ -18,7 +18,7 @@ import { HojaEscaneada } from "@/features/revision/components/escaneo/hoja-escan
 import { RecorteEscaneo } from "@/features/revision/components/escaneo/recorte";
 import type { IdCampo } from "@/features/revision/types/dominio";
 
-import { OmitirCampo } from "./omitir-campo";
+import { MarcarCampo } from "./marcar-campo";
 import { AccionesGrupo } from "./acciones-grupo";
 import { RecorteGrupo } from "./recorte-grupo";
 import type { CuerpoGrupoProps } from "./tarjeta-grupo";
@@ -102,7 +102,7 @@ export function GrupoEntradas({
                                 >
                                     {etiqueta}
                                 </label>
-                                <OmitirCampo
+                                <MarcarCampo
                                     campo={campo}
                                     etiqueta={etiqueta}
                                     editable={editable}

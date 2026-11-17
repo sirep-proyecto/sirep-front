@@ -17,7 +17,7 @@ import { coincideOpcion, type Borrador } from "@/features/revision/lib/grupos";
 import type { IdCampo } from "@/features/revision/types/dominio";
 
 import { AccionesGrupo } from "./acciones-grupo";
-import { OmitirCampo } from "./omitir-campo";
+import { MarcarCampo } from "./marcar-campo";
 import type { CuerpoGrupoProps } from "./tarjeta-grupo";
 
 interface ConfigCasilla {
@@ -170,7 +170,7 @@ export function GrupoCasillas({
                                         />
                                     ) : null}
                                 </div>
-                                <OmitirCampo
+                                <MarcarCampo
                                     campo={campo}
                                     etiqueta={config.rotulo}
                                     editable={editable}

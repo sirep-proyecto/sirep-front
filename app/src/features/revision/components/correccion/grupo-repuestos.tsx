@@ -29,6 +29,7 @@ import {
 } from "@/features/revision/lib/repuestos";
 import type { CampoVista } from "@/features/revision/types/dominio";
 
+import { MarcarCampo } from "./marcar-campo";
 import { AccionesGrupo } from "./acciones-grupo";
 import type { CuerpoGrupoProps } from "./tarjeta-grupo";
 
@@ -223,6 +224,23 @@ export function GrupoRepuestos({
                 <Plus className="size-4 shrink-0" aria-hidden="true" />
                 Agregar fila
             </Boton>
+
+            <div className="mt-3 flex flex-col gap-1.5 border-t border-line pt-2.5">
+                <span className="text-micro uppercase tracking-label text-faint">
+                    Si un dato está en blanco o no se entiende
+                </span>
+                {campos.map((campo) => (
+                    <div key={campo.id} className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-meta text-muted">{campo.definicion.etiqueta}</span>
+                        <MarcarCampo
+                            campo={campo}
+                            etiqueta={campo.definicion.etiqueta}
+                            editable={editable}
+                            acciones={acciones}
+                        />
+                    </div>
+                ))}
+            </div>
 
             <AccionesGrupo
                 campos={campos}

@@ -142,6 +142,9 @@ export function rotuloDeCampos(campos: readonly CampoReporte[]): RotuloGrupo {
     const estado = estadoDeCampos(campos);
     if (estado === "sin_lectura") return { etiqueta: "Sin leer", tono: "brick" };
     if (estado === "pendiente") return { etiqueta: "Pendiente", tono: "amber" };
+    if (campos.every((campo) => campo.estado_revision === "ilegible")) {
+        return { etiqueta: "Ilegible", tono: "brick" };
+    }
     if (campos.every((campo) => campo.estado_revision === "omitido")) {
         return { etiqueta: "Omitido", tono: "neutral" };
     }
