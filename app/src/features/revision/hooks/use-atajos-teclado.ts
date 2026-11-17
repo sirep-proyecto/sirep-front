@@ -18,6 +18,8 @@ export interface OpcionesAtajosTeclado {
     onSiguiente: () => void;
     onAnterior: () => void;
     onConfirmar: () => void;
+    /** Omite el campo activo si el modelo no leyó nada; la tecla es "o". */
+    onOmitir: () => void;
 }
 
 export function useAtajosTeclado({
@@ -25,6 +27,7 @@ export function useAtajosTeclado({
     onSiguiente,
     onAnterior,
     onConfirmar,
+    onOmitir,
 }: OpcionesAtajosTeclado): void {
     useEffect(() => {
         if (!habilitado) return;
@@ -65,6 +68,11 @@ export function useAtajosTeclado({
                     evento.preventDefault();
                     onAnterior();
                     return;
+                case "o":
+                case "O":
+                    evento.preventDefault();
+                    onOmitir();
+                    return;
                 case "Enter": {
                     const activo = document.activeElement;
                     const enControl =
@@ -85,5 +93,5 @@ export function useAtajosTeclado({
 
         document.addEventListener("keydown", manejar);
         return () => document.removeEventListener("keydown", manejar);
-    }, [habilitado, onSiguiente, onAnterior, onConfirmar]);
+    }, [habilitado, onSiguiente, onAnterior, onConfirmar, onOmitir]);
 }

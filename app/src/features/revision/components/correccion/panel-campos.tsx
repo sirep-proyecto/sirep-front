@@ -1,37 +1,46 @@
 /**
- * Responsabilidad: listar los campos agrupados por sección, con los dudosos
- * pendientes primero y el filtro "solo dudosos / todos los campos".
- * Existe porque el orden de esta lista es el ahorro de trabajo del producto:
- * si el técnico tiene que leer el formulario entero, el modelo no sirvió de
- * nada, por eso la vista por defecto muestra solo lo dudoso.
- *
- * La lista se pagina (TAMANO_PAGINA campos por página) para que el panel no
- * crezca sin límite; la paginación es solo de presentación.
+ * Responsabilidad: listar el reporte en sus seis secciones plegables, con el
+ * botón de modo edición y el filtro "solo dudosos / todos los campos" en la
+ * cabecera del panel.
+ * Existe porque el orden y el plegado de esta lista son el ahorro de trabajo del
+ * producto: las secciones con pendientes empiezan abiertas y las que ya están
+ * listas, plegadas; lo leído con confianza alta va resumido en una línea. Sin
+ * páginas: el técnico ve el estado de todo el formulario de un vistazo.
  */
 
 "use client";
 
-import { AlertTriangle, ListChecks, Rows3 } from "lucide-react";
-import { useMemo, useRef, useState, type CSSProperties } from "react";
+import {
+    AlertTriangle,
+    ListChecks,
+    Lock,
+    Rows3,
+    Unlock,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 import { Boton } from "@/components/ui/boton";
-import { Insignia } from "@/components/ui/insignia";
 import type { ErrorAccion } from "@/features/revision/hooks/use-revision-reporte";
-import type { GrupoCampos } from "@/features/revision/lib/dudosos";
-import { pluralizar } from "@/features/revision/lib/formato";
+import {
+    camposDeSeccion,
+    planConfirmarSeccion,
+    type SeccionVista,
+} from "@/features/revision/lib/grupos";
 import type {
     CampoVista,
+    IdSeccion,
     ReporteVista,
 } from "@/features/revision/types/dominio";
 
-import { PaginacionCampos } from "./paginacion-campos";
-import { TarjetaCampo, type AccionesCampo } from "./tarjeta-campo";
-
-const TAMANO_PAGINA = 4;
+import { AyudaTeclado } from "./ayuda-teclado";
+import { ListaElementos } from "./lista-elementos";
+import { ResumenAutomaticos } from "./resumen-automaticos";
+import { SeccionPlegable } from "./seccion-plegable";
+import type { AccionesCampo } from "./tarjeta-campo";
 
 interface PanelCamposProps {
     reporte: ReporteVista;
-    grupos: GrupoCampos[];
+    secciones: SeccionVista[];
     soloDudosos: boolean;
     campoActivo: CampoVista | null;
     /** `true` mientras el repositorio procesa cualquier acción. */
@@ -40,95 +49,74 @@ interface PanelCamposProps {
     errorAccion?: ErrorAccion | null;
     /** Modo de edición activado por el técnico. */
     modoEdicion?: boolean;
+    onAlternarEdicion: () => void;
     onCambiarVista: (soloDudosos: boolean) => void;
     acciones: AccionesCampo;
 }
 
 const OPCIONES_VISTA = [
     { solo: true, etiqueta: "Solo dudosos", Icono: AlertTriangle },
-    { solo: false, etiqueta: "Todos los campos", Icono: Rows3 },
+    { solo: false, etiqueta: "Todos", Icono: Rows3 },
 ] as const;
+
+type SeccionesAbiertas = Partial<Record<IdSeccion, boolean>>;
 
 export function PanelCampos({
     reporte,
-    grupos,
+    secciones,
     soloDudosos,
     campoActivo,
     enCurso,
     errorAccion,
     modoEdicion = false,
+    onAlternarEdicion,
     onCambiarVista,
     acciones,
 }: PanelCamposProps) {
-    const sinCampos = grupos.length === 0;
-    const [pagina, setPagina] = useState(0);
+    const sinCampos = secciones.length === 0;
     const raiz = useRef<HTMLElement>(null);
-    const lista = useRef<HTMLDivElement>(null);
 
-    // Lista plana en el mismo orden en que se muestran los grupos.
-    const plano = useMemo(
-        () =>
-            grupos.flatMap((grupo) =>
-                grupo.campos.map((campo) => ({ grupo, campo })),
-            ),
-        [grupos],
+    // Las secciones con pendientes arrancan abiertas y las listas, plegadas. El
+    // valor inicial se fija una sola vez por sección: si se recalculara en vivo,
+    // una sección se plegaría sola en cuanto se resuelve su último pendiente y la
+    // persona perdería de vista lo que acaba de hacer.
+    const [abiertas, setAbiertas] = useState<SeccionesAbiertas>(() =>
+        Object.fromEntries(
+            secciones.map((seccion) => [seccion.seccion.id, !seccion.listo]),
+        ),
     );
-    const totalPaginas = Math.max(1, Math.ceil(plano.length / TAMANO_PAGINA));
-    const paginaSegura = Math.min(pagina, totalPaginas - 1);
-
-    // Ajustes de página derivados de props, hechos durante el render (patrón de
-    // React para estado que depende de una prop; evita un render extra por efecto).
-    // Al cambiar el filtro se vuelve a la primera página.
-    const [filtroPrevio, setFiltroPrevio] = useState(soloDudosos);
-    if (filtroPrevio !== soloDudosos) {
-        setFiltroPrevio(soloDudosos);
-        setPagina(0);
+    // Secciones que aparecen después (al cambiar el filtro) también arrancan según su estado.
+    const nuevas = secciones.filter(
+        (seccion) => abiertas[seccion.seccion.id] === undefined,
+    );
+    if (nuevas.length > 0) {
+        setAbiertas((previas) => ({
+            ...previas,
+            ...Object.fromEntries(
+                nuevas.map((seccion) => [seccion.seccion.id, !seccion.listo]),
+            ),
+        }));
     }
 
-    // Si el campo activo cambia (p. ej. con atajos de teclado), se muestra su página.
+    // Si el teclado lleva el campo activo a una sección plegada, se abre para que se vea.
     const idActivo = campoActivo?.id;
-    const [activoPrevio, setActivoPrevio] = useState<string | undefined>(
-        undefined,
-    );
+    const [activoPrevio, setActivoPrevio] = useState<string | undefined>(undefined);
     if (activoPrevio !== idActivo) {
         setActivoPrevio(idActivo);
-        const indice = plano.findIndex((item) => item.campo.id === idActivo);
-        if (indice >= 0) setPagina(Math.floor(indice / TAMANO_PAGINA));
-    }
-
-    function cambiarPagina(nueva: number) {
-        setPagina(nueva);
-        // En pantallas grandes el panel tiene altura fija y la lista scrollea por
-        // dentro: basta volver al inicio de la lista, sin mover la página (antes el
-        // scroll saltaba hacia arriba al acortarse la página). En móvil, la lista
-        // sí crece con la página: solo se ajusta si el inicio quedó fuera de vista.
-        lista.current?.scrollTo({ top: 0, behavior: "smooth" });
-        const esEscritorio = window.matchMedia("(min-width: 1024px)").matches;
-        if (!esEscritorio) {
-            const arriba = raiz.current?.getBoundingClientRect().top ?? 0;
-            if (arriba < 72) {
-                window.scrollBy({ top: arriba - 88, behavior: "smooth" });
-            }
-        }
-    }
-
-    // Campos de la página actual, reagrupados por sección.
-    const gruposPagina = useMemo(() => {
-        const visibles = plano.slice(
-            paginaSegura * TAMANO_PAGINA,
-            (paginaSegura + 1) * TAMANO_PAGINA,
+        const dueña = secciones.find((seccion) =>
+            camposDeSeccion(seccion).some((campo) => campo.id === idActivo),
         );
-        const mapa = new Map<
-            string,
-            { grupo: GrupoCampos; campos: CampoVista[] }
-        >();
-        for (const { grupo, campo } of visibles) {
-            const existente = mapa.get(grupo.seccion.id);
-            if (existente) existente.campos.push(campo);
-            else mapa.set(grupo.seccion.id, { grupo, campos: [campo] });
+        if (dueña && !abiertas[dueña.seccion.id]) {
+            setAbiertas((previas) => ({ ...previas, [dueña.seccion.id]: true }));
         }
-        return [...mapa.values()];
-    }, [plano, paginaSegura]);
+    }
+
+    // Lleva la tarjeta activa a la vista cuando cambia con el teclado.
+    useEffect(() => {
+        if (!idActivo) return;
+        const tarjeta = raiz.current?.querySelector(`[data-campos~="${idActivo}"]`);
+        tarjeta?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }, [idActivo]);
 
     return (
         <section
@@ -137,10 +125,34 @@ export function PanelCampos({
             className="flex min-h-0 flex-col gap-3 lg:h-full"
         >
             <div className="flex shrink-0 flex-col gap-3 rounded-md border border-line bg-raised px-3.5 py-3 shadow-xs sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="flex items-center gap-2 text-micro uppercase tracking-label text-faint">
-                    <ListChecks className="size-4" aria-hidden="true" />
-                    Campos del reporte
-                </h2>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <h2 className="flex items-center gap-2 text-micro uppercase tracking-label text-faint">
+                        <ListChecks className="size-4" aria-hidden="true" />
+                        Campos del reporte
+                    </h2>
+                    <Boton
+                        variante={modoEdicion ? "primario" : "secundario"}
+                        tamano="sm"
+                        onClick={onAlternarEdicion}
+                        aria-pressed={modoEdicion}
+                        aria-label={
+                            modoEdicion ? "Desactivar modo edición" : "Activar modo edición"
+                        }
+                        className="gap-1.5"
+                    >
+                        {modoEdicion ? (
+                            <>
+                                <Unlock className="size-3.5" aria-hidden="true" />
+                                Edición habilitada
+                            </>
+                        ) : (
+                            <>
+                                <Lock className="size-3.5" aria-hidden="true" />
+                                Editar
+                            </>
+                        )}
+                    </Boton>
+                </div>
                 <div
                     role="group"
                     aria-label="Filtrar campos"
@@ -153,6 +165,7 @@ export function PanelCampos({
                                 key={solo ? "dudosos" : "todos"}
                                 type="button"
                                 aria-pressed={activo}
+                                title={solo ? "Solo los campos dudosos" : "Todos los campos"}
                                 onClick={() => onCambiarVista(solo)}
                                 className={[
                                     "inline-flex h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-sm px-3 text-meta transition-all duration-150 ease-[var(--ease-salida)]",
@@ -170,10 +183,7 @@ export function PanelCampos({
                 </div>
             </div>
 
-            <div
-                ref={lista}
-                className="scroll-fino flex min-h-0 flex-1 flex-col gap-4 lg:overflow-y-auto lg:overscroll-contain lg:pr-1.5"
-            >
+            <div className="scroll-fino flex min-h-0 flex-1 flex-col gap-3 lg:overflow-y-auto lg:overscroll-contain lg:pr-1.5">
                 {sinCampos ? (
                     <div className="animar-aparecer rounded-md border border-dashed border-line-strong bg-raised px-4 py-8 text-center">
                         <p className="text-body text-muted">
@@ -193,89 +203,49 @@ export function PanelCampos({
                         ) : null}
                     </div>
                 ) : (
-                    <>
-                        {gruposPagina.map(({ grupo, campos }, g) => (
-                            <section
-                                key={`${paginaSegura}-${grupo.seccion.id}`}
-                                aria-labelledby={`seccion-${grupo.seccion.id}`}
-                                className="flex flex-col gap-2"
-                            >
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <h3
-                                        id={`seccion-${grupo.seccion.id}`}
-                                        className="text-micro uppercase tracking-label text-faint"
-                                    >
-                                        {grupo.seccion.titulo}
-                                    </h3>
-                                    <span className="text-micro text-faint">
-                                        {pluralizar(grupo.campos.length, "campo", "campos")}
-                                    </span>
-                                    {grupo.pendientes > 0 ? (
-                                        <Insignia tono="amber" tamano="micro">
-                                            {pluralizar(
-                                                grupo.pendientes,
-                                                "pendiente",
-                                                "pendientes",
-                                            )}
-                                        </Insignia>
-                                    ) : null}
-                                </div>
-                                <ul className="flex flex-col gap-2">
-                                    {campos.map((campo, i) => (
-                                        <li
-                                            key={campo.id}
-                                            className="animar-tarjeta"
-                                            style={
-                                                {
-                                                    "--i":
-                                                        i +
-                                                        gruposPagina
-                                                            .slice(0, g)
-                                                            .reduce(
-                                                                (n, item) => n + item.campos.length,
-                                                                0,
-                                                            ),
-                                                } as CSSProperties
-                                            }
-                                        >
-                                            <TarjetaCampo
-                                                reporte={reporte}
-                                                campo={campo}
-                                                activo={campo.id === campoActivo?.id}
-                                                enCurso={enCurso}
-                                                modoEdicion={modoEdicion}
-                                                error={
-                                                    errorAccion?.campo === campo.id
-                                                        ? errorAccion.mensaje
-                                                        : null
-                                                }
-                                                onSeleccionar={() => acciones.seleccionar(campo.id)}
-                                                onConfirmar={() => acciones.confirmar(campo.id)}
-                                                onCorregir={(valor) =>
-                                                    acciones.corregir(campo.id, valor)
-                                                }
-                                                onIlegible={() => acciones.ilegible(campo.id)}
-                                                onReabrir={() => acciones.reabrir(campo.id)}
-                                                onDescartarError={acciones.descartarError}
-                                            />
-                                        </li>
-                                    ))}
-                                </ul>
-                            </section>
-                        ))}
-                    </>
+                    secciones.map((seccion) => (
+                        <SeccionPlegable
+                            key={seccion.seccion.id}
+                            seccion={seccion}
+                            abierta={abiertas[seccion.seccion.id] ?? !seccion.listo}
+                            enCurso={enCurso}
+                            modoEdicion={modoEdicion}
+                            onAlternar={() =>
+                                setAbiertas((previas) => ({
+                                    ...previas,
+                                    [seccion.seccion.id]: !(
+                                        previas[seccion.seccion.id] ?? !seccion.listo
+                                    ),
+                                }))
+                            }
+                            onConfirmarSeccion={() =>
+                                void acciones.aplicarLote(planConfirmarSeccion(seccion))
+                            }
+                        >
+                            <ResumenAutomaticos
+                                reporte={reporte}
+                                elementos={seccion.automaticos}
+                                campoActivoId={campoActivo?.id ?? null}
+                                enCurso={enCurso}
+                                modoEdicion={modoEdicion}
+                                errorAccion={errorAccion}
+                                acciones={acciones}
+                            />
+                            <ListaElementos
+                                reporte={reporte}
+                                elementos={seccion.elementos}
+                                campoActivoId={campoActivo?.id ?? null}
+                                enCurso={enCurso}
+                                modoEdicion={modoEdicion}
+                                errorAccion={errorAccion}
+                                acciones={acciones}
+                            />
+                        </SeccionPlegable>
+                    ))
                 )}
             </div>
 
-            {sinCampos ? null : (
-                <PaginacionCampos
-                    pagina={paginaSegura}
-                    totalPaginas={totalPaginas}
-                    tamanoPagina={TAMANO_PAGINA}
-                    totalItems={plano.length}
-                    onCambiar={cambiarPagina}
-                />
-            )}
+            <AyudaTeclado className="shrink-0" />
         </section>
     );
 }

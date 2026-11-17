@@ -48,6 +48,10 @@ export function AyudaTeclado({ className }: AyudaTecladoProps) {
                 confirmar
             </span>
             <span className="flex items-center gap-1">
+                <Tecla>o</Tecla>
+                omitir si está vacío
+            </span>
+            <span className="flex items-center gap-1">
                 <Tecla>Tab</Tecla>
                 recorrer controles
             </span>

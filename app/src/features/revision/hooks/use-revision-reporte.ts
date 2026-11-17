@@ -16,14 +16,19 @@ import { obtenerMapa } from "@/config/regiones";
 import { USUARIO_ACTUAL } from "@/config/sesion";
 import { componerReporte, valorVigente } from "@/features/revision/lib/campos";
 import {
-    agruparCampos,
     calcularPendientes,
     camposPendientesOrdenados,
     esDudoso,
     requiereRevision,
     siguienteCampoPendiente,
-    type GrupoCampos,
 } from "@/features/revision/lib/dudosos";
+import {
+    camposDeSeccion,
+    construirSecciones,
+    esOmitible,
+    type PasoLote,
+    type SeccionVista,
+} from "@/features/revision/lib/grupos";
 import { pluralizar } from "@/features/revision/lib/formato";
 import { useTiempoReal } from "@/features/revision/hooks/use-tiempo-real";
 import { useRepositorio } from "@/features/revision/providers/repositorio-contexto";
@@ -49,7 +54,8 @@ export interface RevisionReporte {
     recargar: () => void;
     reporte: ReporteVista | null;
     pendientes: PendientesRevision;
-    grupos: GrupoCampos[];
+    /** Secciones plegables con sus tarjetas, contadores y resumen de confianza alta. */
+    secciones: SeccionVista[];
     /** Campos visibles en el orden en que se listan, para el avance del móvil. */
     visibles: CampoVista[];
     campoActivo: CampoVista | null;
@@ -60,8 +66,12 @@ export interface RevisionReporte {
     confirmar: (campo: IdCampo) => Promise<boolean>;
     corregir: (campo: IdCampo, valor: string) => Promise<boolean>;
     marcarIlegible: (campo: IdCampo) => Promise<boolean>;
+    omitir: (campo: IdCampo) => Promise<boolean>;
+    /** Aplica varios pasos (uno por campo) en orden; se detiene en el primer error. */
+    aplicarLote: (pasos: PasoLote[]) => Promise<boolean>;
     reabrir: (campo: IdCampo) => Promise<boolean>;
     confirmarCampoActivo: () => Promise<void>;
+    omitirCampoActivo: () => Promise<void>;
     deshacer: () => Promise<void>;
     /** Campo con una acción en vuelo; mientras dura, la lista queda bloqueada. */
     campoEnCurso: IdCampo | null;
@@ -112,6 +122,9 @@ function anuncioDeAccion(
             break;
         case "ilegible":
             frase = `Campo ${etiqueta} marcado ilegible.`;
+            break;
+        case "omitir":
+            frase = `Campo ${etiqueta} omitido: está vacío en el papel.`;
             break;
         case "reabrir":
             frase = `Campo ${etiqueta} reabierto.`;
@@ -228,14 +241,14 @@ export function useRevisionReporte(numero: string): RevisionReporte {
         [reporte],
     );
 
-    const grupos = useMemo<GrupoCampos[]>(
-        () => (reporte ? agruparCampos(reporte.campos, { soloDudosos }) : []),
+    const secciones = useMemo<SeccionVista[]>(
+        () => (reporte ? construirSecciones(reporte.campos, { soloDudosos }) : []),
         [reporte, soloDudosos],
     );
 
     const visibles = useMemo(
-        () => grupos.flatMap((grupo) => grupo.campos),
-        [grupos],
+        () => secciones.flatMap(camposDeSeccion),
+        [secciones],
     );
 
     const campoActivo = useMemo(
@@ -366,6 +379,85 @@ export function useRevisionReporte(numero: string): RevisionReporte {
         [ejecutar],
     );
 
+    const omitir = useCallback(
+        (campo: IdCampo) =>
+            ejecutar(campo, { tipo: "omitir", actor: USUARIO_ACTUAL.nombre }),
+        [ejecutar],
+    );
+
+    /**
+     * Una tarjeta agrupada o "Confirmar sección" son varios campos: se aplican de
+     * a uno, en orden, porque el backend revisa un campo por llamada. Lo ya
+     * guardado se muestra aunque un paso falle; el error queda en el campo que
+     * falló y los pasos siguientes no se envían.
+     */
+    const aplicarLote = useCallback(
+        async (pasos: PasoLote[]): Promise<boolean> => {
+            if (!reporte || campoEnCurso || pasos.length === 0) return false;
+
+            setCampoEnCurso(pasos[0].campo);
+            setErrorAccion(null);
+            ultimaAccionPropia.current = Date.now();
+
+            let ultimo: ReporteVista | null = null;
+            let aplicados = 0;
+            let fallo: ErrorAccion | null = null;
+            try {
+                for (const paso of pasos) {
+                    try {
+                        const actualizado = await repositorio.revisarCampo(
+                            reporte.numero_reporte,
+                            paso.campo,
+                            {
+                                ...paso.accion,
+                                actor: USUARIO_ACTUAL.nombre,
+                            } as AccionRevision,
+                        );
+                        ultimo = componerReporte(
+                            actualizado,
+                            obtenerMapa(actualizado.diseno_talonario),
+                        );
+                        aplicados += 1;
+                    } catch (error) {
+                        fallo = { campo: paso.campo, mensaje: mensajeDeError(error) };
+                        break;
+                    }
+                }
+
+                if (ultimo) {
+                    setReporte(ultimo);
+                    const pendientesAhora = calcularPendientes(ultimo.campos);
+                    setAnuncio(
+                        `${pluralizar(aplicados, "campo actualizado", "campos actualizados")}. ${
+                            pendientesAhora.dudosos === 0
+                                ? "No quedan dudosos pendientes: el reporte está completo."
+                                : `Quedan ${pluralizar(
+                                    pendientesAhora.dudosos,
+                                    "dudoso pendiente",
+                                    "dudosos pendientes",
+                                )}.`
+                        }`,
+                    );
+                    const ultimoCampo = pasos[aplicados - 1].campo;
+                    const proximo = siguienteCampoPendiente(
+                        ultimo.campos,
+                        ultimoCampo,
+                        1,
+                    );
+                    setCampoActivoId(proximo ?? ultimoCampo);
+                    // Un lote no se deshace con el "Deshacer" de la barra, que es de un solo campo.
+                    setUltimaAccion(null);
+                }
+                if (fallo) setErrorAccion(fallo);
+                return fallo === null;
+            } finally {
+                ultimaAccionPropia.current = Date.now();
+                setCampoEnCurso(null);
+            }
+        },
+        [reporte, campoEnCurso, repositorio],
+    );
+
     const reabrir = useCallback(
         (campo: IdCampo) =>
             ejecutar(campo, { tipo: "reabrir", actor: USUARIO_ACTUAL.nombre }),
@@ -379,6 +471,16 @@ export function useRevisionReporte(numero: string): RevisionReporte {
         if ((valorVigente(campoActivo) ?? "").trim() === "") return;
         await ejecutar(campoActivo.id, {
             tipo: "confirmar",
+            actor: USUARIO_ACTUAL.nombre,
+        });
+    }, [campoActivo, ejecutar]);
+
+    const omitirCampoActivo = useCallback(async () => {
+        // Solo se omite lo que el modelo no leyó y sigue pendiente: omitir un
+        // campo con valor lo borraría sin que nadie lo haya decidido.
+        if (!campoActivo || !esOmitible(campoActivo)) return;
+        await ejecutar(campoActivo.id, {
+            tipo: "omitir",
             actor: USUARIO_ACTUAL.nombre,
         });
     }, [campoActivo, ejecutar]);
@@ -401,7 +503,7 @@ export function useRevisionReporte(numero: string): RevisionReporte {
         recargar,
         reporte,
         pendientes,
-        grupos,
+        secciones,
         visibles,
         campoActivo,
         soloDudosos,
@@ -411,8 +513,11 @@ export function useRevisionReporte(numero: string): RevisionReporte {
         confirmar,
         corregir,
         marcarIlegible,
+        omitir,
+        aplicarLote,
         reabrir,
         confirmarCampoActivo,
+        omitirCampoActivo,
         deshacer,
         campoEnCurso,
         errorAccion,

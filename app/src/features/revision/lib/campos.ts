@@ -39,6 +39,9 @@ export function componerReporte(
 
 /** El valor que hoy representa al campo: la corrección humana manda. */
 export function valorVigente(campo: CampoReporte): string | null {
+    // Omitido es "vacío en el papel" decidido por una persona: no hay valor, ni
+    // siquiera el que el modelo haya devuelto antes.
+    if (campo.estado_revision === "omitido") return null;
     if (campo.valor_corregido !== null && campo.valor_corregido !== "") {
         return campo.valor_corregido;
     }
@@ -46,5 +49,6 @@ export function valorVigente(campo: CampoReporte): string | null {
 }
 
 export function valorDeRespaldo(campo: CampoReporte): string {
+    if (campo.estado_revision === "omitido") return "Omitido";
     return valorVigente(campo) ?? "Sin lectura";
 }
