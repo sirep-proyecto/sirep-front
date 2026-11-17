@@ -61,7 +61,7 @@ export interface Escaneo {
   /** Enlaces temporales y firmados a la imagen de cada página, en orden. Vacío si no se pudieron firmar. */
   paginas_urls: string[];
   enviado_por: string;
-  canal: "telegram";
+  canal: "telegram" | "web";
   estado: EstadoEscaneo;
   recibido_en: string;
   procesado_en: string | null;

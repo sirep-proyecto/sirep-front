@@ -13,10 +13,23 @@ import { EstadosBandeja } from "@/features/revision/components/bandeja/estados-b
 import { ListaTarjetas } from "@/features/revision/components/bandeja/lista-tarjetas";
 import { ResumenBandeja } from "@/features/revision/components/bandeja/resumen-bandeja";
 import { TablaReportes } from "@/features/revision/components/bandeja/tabla-reportes";
+import { useEffect } from "react";
+
+import { BotonSubirReportes } from "@/features/revision/components/subida/boton-subir-reportes";
+import { ZonaSoltarPagina } from "@/features/revision/components/subida/zona-soltar-pagina";
 import { useBandeja } from "@/features/revision/hooks/use-bandeja";
+import { useSubida } from "@/features/revision/providers/subida-contexto";
 
 export default function PaginaBandeja() {
   const bandeja = useBandeja();
+  const { estado: subida } = useSubida();
+
+  // Cada reporte que termina de leer la IA se refleja en la bandeja de
+  // inmediato, sin esperar al aviso en vivo (que puede no llegar).
+  const { refrescar } = bandeja;
+  useEffect(() => {
+    if (subida.listos > 0) refrescar();
+  }, [subida.listos, refrescar]);
 
   // Resumen y barra solo con archivo cargado: durante la carga o el error
   // mostraría cifras en cero que parecieran ser verdad.
@@ -26,6 +39,8 @@ export default function PaginaBandeja() {
 
   return (
     <div className="mx-auto w-full max-w-(--layout-max) px-(--space-gutter) pb-16">
+      <ZonaSoltarPagina />
+      <div className="flex flex-wrap items-end justify-between gap-4">
       <header className="max-w-2xl pt-10 pb-7">
         <p className="mb-2 inline-flex items-center gap-2 text-micro font-medium uppercase tracking-label text-petrol-700">
           <span aria-hidden="true" className="size-1.5 rounded-full bg-petrol-600" />
@@ -39,6 +54,10 @@ export default function PaginaBandeja() {
           espera tu revisión, junto al recorte del escaneo.
         </p>
       </header>
+      <div className="pb-7">
+        <BotonSubirReportes />
+      </div>
+      </div>
 
       {conArchivo ? (
         <>

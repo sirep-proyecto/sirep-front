@@ -46,6 +46,8 @@ export interface UsoBandeja {
   establecerOrden: (valor: OrdenBandeja) => void;
   limpiarFiltros: () => void;
   reintentar: () => void;
+  /** Vuelve a pedir la lista sin pasar por "cargando" ni perder filtros. */
+  refrescar: () => void;
 }
 
 const FILTROS_INICIALES: FiltrosBandeja = {
@@ -112,6 +114,15 @@ export function useBandeja(): UsoBandeja {
     [],
   );
 
+  const refrescar = useCallback(() => {
+    repositorio
+      .listarReportes()
+      .then((reportes) => setReportesArchivo(reportes))
+      .catch(() => {
+        // Un fallo al refrescar no debe tapar lo ya cargado
+      });
+  }, [repositorio]);
+
   const reportes = useMemo(
     () => ordenarReportes(filtrarReportes(reportesArchivo, filtros), orden),
     [reportesArchivo, filtros, orden],
@@ -164,5 +175,6 @@ export function useBandeja(): UsoBandeja {
     establecerOrden,
     limpiarFiltros,
     reintentar,
+    refrescar,
   };
 }
