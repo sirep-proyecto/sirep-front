@@ -2,8 +2,8 @@
  * Responsabilidad: la tarjeta de casillas de revisión (estado del equipo,
  * limpieza, cabezales y sistema de protección) como controles segmentados.
  * Existe porque en el papel son casillas para tildar, y el técnico las compara de
- * un vistazo: cada opción del papel es un segmento y "Vacío" es una decisión
- * explícita (omite el campo al confirmar), nunca un valor que se asuma.
+ * un vistazo: cada opción del papel es un segmento. Si una casilla está en
+ * blanco, cada fila tiene su propio "Omitir": lo decide la persona, campo por campo.
  */
 
 "use client";
@@ -17,6 +17,7 @@ import { coincideOpcion, type Borrador } from "@/features/revision/lib/grupos";
 import type { IdCampo } from "@/features/revision/types/dominio";
 
 import { AccionesGrupo } from "./acciones-grupo";
+import { OmitirCampo } from "./omitir-campo";
 import type { CuerpoGrupoProps } from "./tarjeta-grupo";
 
 interface ConfigCasilla {
@@ -38,7 +39,6 @@ const CONFIG_CASILLAS: Partial<Record<IdCampo, ConfigCasilla>> = {
 };
 
 const OTRO = "Otro";
-const VACIO = "Vacío";
 
 interface SegmentoProps {
     etiqueta: string;
@@ -169,13 +169,13 @@ export function GrupoCasillas({
                                             }}
                                         />
                                     ) : null}
-                                    <Segmento
-                                        etiqueta={VACIO}
-                                        activo={!enOtro && mostrado === ""}
-                                        deshabilitado={!editable}
-                                        onElegir={() => elegir(campo.id, "")}
-                                    />
                                 </div>
+                                <OmitirCampo
+                                    campo={campo}
+                                    etiqueta={config.rotulo}
+                                    editable={editable}
+                                    acciones={acciones}
+                                />
                                 {enOtro ? (
                                     <Entrada
                                         value={opcionActual ? "" : mostrado}

@@ -18,6 +18,7 @@ import { HojaEscaneada } from "@/features/revision/components/escaneo/hoja-escan
 import { RecorteEscaneo } from "@/features/revision/components/escaneo/recorte";
 import type { IdCampo } from "@/features/revision/types/dominio";
 
+import { OmitirCampo } from "./omitir-campo";
 import { AccionesGrupo } from "./acciones-grupo";
 import { RecorteGrupo } from "./recorte-grupo";
 import type { CuerpoGrupoProps } from "./tarjeta-grupo";
@@ -94,12 +95,20 @@ export function GrupoEntradas({
                     const idEntrada = `entrada-${campo.id}`;
                     return (
                         <div key={campo.id} className="min-w-0">
-                            <label
-                                htmlFor={idEntrada}
-                                className="block text-micro uppercase tracking-label text-faint"
-                            >
-                                {etiqueta}
-                            </label>
+                            <div className="flex items-center justify-between gap-2">
+                                <label
+                                    htmlFor={idEntrada}
+                                    className="block text-micro uppercase tracking-label text-faint"
+                                >
+                                    {etiqueta}
+                                </label>
+                                <OmitirCampo
+                                    campo={campo}
+                                    etiqueta={etiqueta}
+                                    editable={editable}
+                                    acciones={acciones}
+                                />
+                            </div>
                             {config.recorte === "campo" ? (
                                 <div
                                     aria-hidden="true"
