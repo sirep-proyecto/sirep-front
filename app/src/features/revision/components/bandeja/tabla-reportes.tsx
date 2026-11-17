@@ -14,6 +14,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+import { BotonEnviarRptech } from "@/features/revision/components/bandeja/boton-enviar-rptech";
 import { CeldaDudosos } from "@/features/revision/components/bandeja/celda-dudosos";
 import { EtiquetaEstado } from "@/features/revision/components/comunes/etiqueta-estado";
 import { EtiquetaOrigen } from "@/features/revision/components/comunes/etiqueta-origen";
@@ -29,11 +30,16 @@ const ELEMENTOS_POR_PAGINA = 10;
 interface TablaReportesProps {
   reportes: readonly Reporte[];
   ruta: string;
+  /** Sin `onEnviar` (vista de calibración) no se muestran botones de envío. */
+  enviando?: ReadonlySet<string>;
+  onEnviar?: (numero: string) => void;
 }
 
 interface FilaReporteProps {
   reporte: Reporte;
   ruta: string;
+  enviando: boolean;
+  onEnviar?: (numero: string) => void;
 }
 
 const CLASE_CELDA = "border-b border-line px-4 py-2.5";
@@ -41,7 +47,7 @@ const CLASE_CELDA = "border-b border-line px-4 py-2.5";
 const CLASE_CABECERA =
   "border-b border-line px-4 py-3 text-left text-micro font-medium uppercase tracking-label text-muted";
 
-function FilaReporte({ reporte, ruta }: FilaReporteProps) {
+function FilaReporte({ reporte, ruta, enviando, onEnviar }: FilaReporteProps) {
   const {
     numero_reporte,
     cliente,
@@ -92,7 +98,12 @@ function FilaReporte({ reporte, ruta }: FilaReporteProps) {
         <CeldaDudosos campos={campos} />
       </td>
       <td className={`${CLASE_CELDA} font-mono text-meta text-faint`}>
-        {formatearFecha(fecha_reporte)}
+        <div className="flex flex-wrap items-center gap-2">
+          <span>{formatearFecha(fecha_reporte)}</span>
+          {onEnviar ? (
+            <BotonEnviarRptech reporte={reporte} enviando={enviando} onEnviar={onEnviar} />
+          ) : null}
+        </div>
       </td>
     </tr>
   );
@@ -114,7 +125,7 @@ function generarNumerosPagina(actual: number, total: number): (number | "...")[]
   return [1, "...", actual - 1, actual, actual + 1, "...", total];
 }
 
-export function TablaReportes({ reportes, ruta }: TablaReportesProps) {
+export function TablaReportes({ reportes, ruta, enviando = new Set(), onEnviar }: TablaReportesProps) {
   const [paginaActual, setPaginaActual] = useState(1);
 
   const totalPaginas = Math.max(1, Math.ceil(reportes.length / ELEMENTOS_POR_PAGINA));
@@ -168,7 +179,13 @@ export function TablaReportes({ reportes, ruta }: TablaReportesProps) {
           </thead>
           <tbody>
             {reportesPaginados.map((reporte) => (
-              <FilaReporte key={reporte.id} reporte={reporte} ruta={ruta} />
+              <FilaReporte
+                key={reporte.id}
+                reporte={reporte}
+                ruta={ruta}
+                enviando={enviando.has(reporte.numero_reporte)}
+                onEnviar={onEnviar}
+              />
             ))}
           </tbody>
         </table>
