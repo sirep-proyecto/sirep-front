@@ -8,6 +8,7 @@
 import {
     AlertOctagon,
     CheckCircle2,
+    CircleSlash,
     Inbox,
     PencilLine,
     RotateCcw,
@@ -38,7 +39,7 @@ const ICONOS_CAMPO: Record<EstadoRevisionCampo, LucideIcon> = {
     confirmado: CheckCircle2,
     corregido: PencilLine,
     ilegible: AlertOctagon,
-    omitido: CheckCircle2,
+    omitido: CircleSlash,
 };
 
 interface EtiquetaEstadoProps {

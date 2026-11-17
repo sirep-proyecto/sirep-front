@@ -50,6 +50,7 @@ import {
 import type { FormatoDescarga } from "@/features/revision/components/correccion/menu-descarga";
 import { useModoVisor } from "@/features/revision/hooks/use-modo-visor";
 import { useRevisionReporte } from "@/features/revision/hooks/use-revision-reporte";
+import { useAtajosTeclado } from "@/features/revision/hooks/use-atajos-teclado";
 import type { NumeroPagina } from "@/features/revision/types/regiones";
 
 interface VistaCorreccionProps {
@@ -69,6 +70,19 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
   // Modo del visor (recordado en localStorage) y capa resaltada desde la lista.
   const [modoVisor, setModoVisor] = useModoVisor();
   const [capaResaltada, setCapaResaltada] = useState<string | null>(null);
+
+  // Los atajos de confirmar y omitir respetan el modo edición, igual que los botones.
+  useAtajosTeclado({
+    habilitado: revision.estado === "listo",
+    onSiguiente: () => revision.mover(1),
+    onAnterior: () => revision.mover(-1),
+    onConfirmar: () => {
+      if (modoEdicion) void revision.confirmarCampoActivo();
+    },
+    onOmitir: () => {
+      if (modoEdicion) void revision.omitirCampoActivo();
+    },
+  });
 
   if (revision.estado === "cargando") return <CargandoRevision />;
   if (revision.estado === "no_encontrado")
@@ -121,8 +135,6 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
       <BarraAccionesReporte
         numeroReporte={reporte.numero_reporte}
         cliente={reporte.cliente}
-        modoEdicion={modoEdicion}
-        onAlternarEdicion={() => setModoEdicion((prev) => !prev)}
         onDescargar={handleDescargar}
         onVerImagenReal={() => setModalOriginal(true)}
       />
@@ -339,18 +351,21 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
         <div className="animar-lado flex min-h-0 flex-col lg:h-full" style={{ "--retardo": 90 } as CSSProperties}>
           <PanelCampos
             reporte={reporte}
-            grupos={revision.grupos}
+            secciones={revision.secciones}
             soloDudosos={revision.soloDudosos}
             campoActivo={revision.campoActivo}
             enCurso={revision.campoEnCurso !== null}
             errorAccion={revision.errorAccion}
             modoEdicion={modoEdicion}
+            onAlternarEdicion={() => setModoEdicion((prev) => !prev)}
             onCambiarVista={revision.cambiarVista}
             acciones={{
               seleccionar: revision.seleccionar,
               confirmar: (id) => void revision.confirmar(id),
               corregir: revision.corregir,
               ilegible: (id) => void revision.marcarIlegible(id),
+              omitir: (id) => void revision.omitir(id),
+              aplicarLote: revision.aplicarLote,
               reabrir: (id) => void revision.reabrir(id),
               descartarError: revision.descartarError,
             }}

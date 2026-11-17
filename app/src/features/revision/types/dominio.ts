@@ -19,6 +19,10 @@ export type OrigenReporte = "historico" | "sistema";
  * `auto` existe para no mentir: un campo de confianza alta fue aceptado por el
  * modelo y no pasó por manos de una persona. Confundirlo con "confirmado" haría
  * que la auditoría mostrara revisión humana donde no la hubo.
+ *
+ * `omitido` es la decisión de una persona de dejar el campo vacío porque así
+ * estaba en el papel. Cuenta como revisado, no tiene valor y NUNCA lo asigna el
+ * sistema por su cuenta, ni siquiera en los campos `opcional`.
  */
 export type EstadoRevisionCampo =
   | "auto"
@@ -135,6 +139,7 @@ export type AccionRevision =
   | { tipo: "confirmar"; actor: string }
   | { tipo: "corregir"; actor: string; valor: string }
   | { tipo: "ilegible"; actor: string }
+  | { tipo: "omitir"; actor: string }
   | { tipo: "reabrir"; actor: string };
 
 export type CodigoErrorRepositorio =

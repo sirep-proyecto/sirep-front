@@ -10,7 +10,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertOctagon, CheckCircle2, PencilLine, Stamp } from "lucide-react";
+import {
+    AlertOctagon,
+    CheckCircle2,
+    CircleSlash,
+    PencilLine,
+    Stamp,
+} from "lucide-react";
 
 import { formatearFechaHora } from "@/features/revision/lib/formato";
 import type { ResumenDisposiciones } from "@/features/revision/lib/dudosos";
@@ -45,6 +51,12 @@ const FILAS: Array<{
             etiqueta: "ilegibles",
             clase: "text-brick-700",
             icono: AlertOctagon,
+        },
+        {
+            clave: "omitidos",
+            etiqueta: "omitidos",
+            clase: "text-muted",
+            icono: CircleSlash,
         },
     ];
 

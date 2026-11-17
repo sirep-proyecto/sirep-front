@@ -78,3 +78,28 @@ export function calcularRecorte(
             (anchoVentana * mapa.ancho_pagina) / (altoVentana * mapa.alto_pagina),
     };
 }
+
+/**
+ * Región mínima que contiene a todas las dadas, para mostrar de una vez lo que
+ * en el papel es un solo dato (la tabla de repuestos, la fila de horarios).
+ * Solo junta las de la misma página que la primera: un recorte no puede cruzar
+ * hojas distintas.
+ */
+export function unirRegiones(regiones: readonly Region[]): Region | null {
+    if (regiones.length === 0) return null;
+    const pagina = regiones[0].pagina;
+    const mismas = regiones.filter((region) => region.pagina === pagina);
+
+    const izquierda = Math.min(...mismas.map((region) => region.x));
+    const arriba = Math.min(...mismas.map((region) => region.y));
+    const derecha = Math.max(...mismas.map((region) => region.x + region.ancho));
+    const abajo = Math.max(...mismas.map((region) => region.y + region.alto));
+
+    return {
+        x: izquierda,
+        y: arriba,
+        ancho: derecha - izquierda,
+        alto: abajo - arriba,
+        pagina,
+    };
+}

@@ -82,7 +82,7 @@ export const ETIQUETAS_REVISION: Record<
     },
     omitido: {
         etiqueta: "Omitido",
-        descripcion: "El campo estaba en blanco en el papel.",
+        descripcion: "Una persona confirmó que el campo está vacío en el papel.",
         tono: "neutral",
     },
 };

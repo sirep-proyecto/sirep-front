@@ -93,3 +93,11 @@ describe("hayCierre", () => {
     expect(hayCierre(crearPendientes(0, 0, 0), "completo")).toBe(true);
   });
 });
+
+describe("tonoDeCampo con campos omitidos", () => {
+  it("un campo omitido se ve como revisado, no como pendiente", () => {
+    expect(tonoDeCampo(crearCampo("omitido", { confianza: null, noLeido: true }))).toBe(
+      "green",
+    );
+  });
+});
