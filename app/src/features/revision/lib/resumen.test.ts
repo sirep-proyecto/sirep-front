@@ -106,14 +106,14 @@ describe("calcularResumenBandeja", () => {
     expect(resumen.total).toBe(4);
   });
 
-  it("suma los campos dudosos por confianza de lectura, aunque ya estén resueltos", () => {
+  it("suma solo los campos dudosos que siguen pendientes de revisión", () => {
     const reportes = [
       crearReporte("000845", {
         campos: [
-          crearCampo("media"),
-          crearCampo("baja"),
+          crearCampo("media", "pendiente"),
+          crearCampo("baja", "pendiente"),
           crearCampo(null, "pendiente", true),
-          crearCampo("alta"),
+          crearCampo("alta", "pendiente"),
           crearCampo(null, "auto", false),
         ],
       }),
@@ -124,9 +124,9 @@ describe("calcularResumenBandeja", () => {
 
     const resumen = calcularResumenBandeja(reportes, new Date(2026, 10, 2));
 
-    // Media, baja y no leído son dudosas; alta y null sin no_leído no lo son.
-    // Los resueltos siguen sumando: la cifra mide material dudoso del archivo.
-    expect(resumen.campos_dudosos).toBe(5);
+    // Media, baja y no leído pendientes suman; alta no es dudosa y los ya
+    // confirmados o corregidos ya no cuentan: la cifra baja al revisar.
+    expect(resumen.campos_dudosos).toBe(3);
   });
 
   it("cuenta completados hoy por completado_en en fecha local, no por actualizado_en", () => {

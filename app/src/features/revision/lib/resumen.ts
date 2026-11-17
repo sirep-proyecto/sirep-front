@@ -6,7 +6,7 @@
  * resumen y la tabla podrían contradecirse.
  */
 
-import { esDudoso } from "@/features/revision/lib/dudosos";
+import { calcularPendientes } from "@/features/revision/lib/dudosos";
 import type {
     Reporte,
     ResumenBandeja,
@@ -40,10 +40,11 @@ export function calcularResumenBandeja(
         // estado distinto de "completo", incluido "recibido" (sin leer todavía).
         reportes_pendientes: reportes.filter((reporte) => reporte.estado !== "completo")
             .length,
-        // Se cuenta por confianza de lectura (esDudoso), no por revisión: la cifra
-        // mide cuánto material dudoso hay en el archivo, resuelto o no.
+        // Solo cuenta los dudosos que siguen sin resolver (confirmar, corregir,
+        // marcar ilegible u omitir los descuenta). Usa la misma regla que la
+        // columna "Dudosos pendientes" de la tabla para que ambas coincidan.
         campos_dudosos: reportes.reduce(
-            (total, reporte) => total + reporte.campos.filter(esDudoso).length,
+            (total, reporte) => total + calcularPendientes(reporte.campos).dudosos,
             0,
         ),
         completados: reportes.filter(
