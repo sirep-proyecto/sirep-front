@@ -34,7 +34,7 @@ import type {
 } from "@/features/revision/types/dominio";
 import type { Tono } from "@/features/revision/lib/etiquetas";
 
-export type IdGrupo = "repuestos" | "casillas" | "lineas" | "horario" | "firmas";
+export type IdGrupo = "repuestos" | "casillas" | "lineas" | "horario" | "labor" | "firmas";
 
 export interface DefinicionGrupo {
     id: IdGrupo;
@@ -77,6 +77,13 @@ export const GRUPOS: readonly DefinicionGrupo[] = [
         titulo: "Horario de atención",
         seccion: "cierre",
         campos: ["hora_llegada", "hora_salida"],
+    },
+    {
+        // Casillas de "Información de la labor": se marcan o no, como las de revisión.
+        id: "labor",
+        titulo: "Información de la labor",
+        seccion: "cierre",
+        campos: ["garantia", "facturado"],
     },
     {
         id: "firmas",

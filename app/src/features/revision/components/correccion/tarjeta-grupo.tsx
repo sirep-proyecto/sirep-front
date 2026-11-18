@@ -145,7 +145,7 @@ export function TarjetaGrupo({
                 {definicion.id === "repuestos" ? (
                     <GrupoRepuestos key={firmaDeCampos(campos)} {...props} />
                 ) : null}
-                {definicion.id === "casillas" ? (
+                {definicion.id === "casillas" || definicion.id === "labor" ? (
                     <GrupoCasillas key={firmaDeCampos(campos)} {...props} />
                 ) : null}
                 {definicion.id === "lineas" ||

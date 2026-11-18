@@ -1,6 +1,8 @@
 /**
  * Responsabilidad: componer la(s) hoja(s) del visor según el modo elegido y
- * aplicarles el zoom.
+ * aplicarles el zoom. El zoom agranda el ancho de la hoja (no un `transform`):
+ * así el área de desplazamiento crece con ella y se puede recorrer toda la hoja
+ * ampliada, también hacia la izquierda.
  * Existe para que `vista-correccion` solo pase datos: aquí se decide si se ve la
  * hoja original, la corregida (con capas) o las dos en paralelo con el mismo
  * zoom, así las dos hojas siempre se ven a la misma escala.
@@ -25,6 +27,8 @@ interface LienzoEscaneoProps {
   resaltado: ResaltadoRegion | null;
   capaResaltada: string | null;
   onResaltarCapa: (id: string | null) => void;
+  /** Clic sobre la hoja, en coordenadas 0–1 de la página (para elegir el campo de ahí). */
+  onClicPunto?: (x: number, y: number) => void;
 }
 
 export function LienzoEscaneo({
@@ -36,6 +40,7 @@ export function LienzoEscaneo({
   resaltado,
   capaResaltada,
   onResaltarCapa,
+  onClicPunto,
 }: LienzoEscaneoProps) {
   const capasPagina = capasDePagina(capas, pagina);
   const ladoALado = modo === "lado_a_lado";
@@ -46,6 +51,7 @@ export function LienzoEscaneo({
       pagina={pagina}
       reporte={reporte}
       resaltado={modo === "corregido" ? null : resaltado}
+      onClicPunto={onClicPunto}
     />
   );
   const corregida = (
@@ -57,17 +63,20 @@ export function LienzoEscaneo({
       capas={capasPagina}
       capaResaltada={capaResaltada}
       onResaltarCapa={onResaltarCapa}
+      onClicPunto={onClicPunto}
     />
   );
+  const anchoBase = ladoALado ? 1200 : 600;
 
   return (
     <div
       style={{
-        transform: `scale(${zoom})`,
-        transformOrigin: "top center",
-        transition: "transform 150ms ease-out",
-        width: "100%",
-        maxWidth: ladoALado ? "1200px" : "600px",
+        width: `${zoom * 100}%`,
+        maxWidth: `${anchoBase * zoom}px`,
+        flexShrink: 0,
+        // margin auto centra mientras cabe y, si la hoja es más ancha, la deja
+        // empezar en el borde (justify-center cortaría la parte izquierda).
+        margin: "0 auto",
       }}
     >
       {ladoALado ? (
