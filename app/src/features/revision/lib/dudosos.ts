@@ -31,6 +31,19 @@ export function requiereRevision(
     return campo.estado_revision === "pendiente";
 }
 
+/**
+ * Lo que el técnico tiene que mirar: dudoso por cómo lo leyó el modelo o
+ * pendiente porque el backend lo marcó para revisión. El backend deja
+ * pendiente también un campo leído con confianza alta si la IA lo marcó
+ * `dudoso` (pasa, por ejemplo, cuando se suben muchos reportes a la vez); sin
+ * esto quedaba fuera de "Solo dudosos" y solo se veía en "Todos los campos".
+ */
+export function entraEnRevision(
+    campo: Pick<CampoReporte, "confianza" | "no_leido" | "estado_revision">,
+): boolean {
+    return esDudoso(campo) || requiereRevision(campo);
+}
+
 export function fueResueltoPorPersona(
     campo: Pick<CampoReporte, "estado_revision">,
 ): boolean {
@@ -55,9 +68,7 @@ export function contarPendientes(campos: readonly CampoReporte[]): number {
 export function calcularPendientes(
     campos: readonly CampoReporte[],
 ): PendientesRevision {
-    const involucrados = campos.filter(
-        (campo) => esDudoso(campo) || requiereRevision(campo),
-    );
+    const involucrados = campos.filter(entraEnRevision);
     return {
         total: involucrados.length,
         resueltos: involucrados.filter(fueResueltoPorPersona).length,

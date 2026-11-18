@@ -90,19 +90,21 @@ export function crearRepositorioApi(): RepositorioReportes {
       }
     },
 
-    // El envío deja pasar el `ApiError` tal cual: `mensajeErrorEnvio` distingue
-    // 409 (rechazo de RP-TECH), 503 (RP-TECH caído) y 400 con el texto del servidor.
+    // Los envíos a RP-TECH no pasan por `traducirError`: la interfaz muestra
+    // el `message` del backend (400, 409, 503) tal cual, sin traducirlo.
     enviarARptech(numero: string) {
       return apiClient.patch<RespuestaEnvio>(
         `/reportes/${encodeURIComponent(numero)}/importar`,
         undefined,
-        { cache: "no-store" },
+        { cache: "no-store", timeoutMs: 60_000 },
       );
     },
 
+    // Uno por uno (~1-3 s cada uno): timeout de 5 minutos.
     enviarLoteARptech() {
       return apiClient.post<ResumenLote>("/reportes/importar-lote", undefined, {
         cache: "no-store",
+        timeoutMs: 300_000,
       });
     },
   };

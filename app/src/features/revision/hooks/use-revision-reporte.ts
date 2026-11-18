@@ -18,7 +18,7 @@ import { componerReporte, valorVigente } from "@/features/revision/lib/campos";
 import {
     calcularPendientes,
     camposPendientesOrdenados,
-    esDudoso,
+    entraEnRevision,
     requiereRevision,
     siguienteCampoPendiente,
 } from "@/features/revision/lib/dudosos";
@@ -271,7 +271,7 @@ export function useRevisionReporte(numero: string): RevisionReporte {
             const activo = reporte.campos.find(
                 (campo) => campo.id === campoActivoId,
             );
-            if (activo && esDudoso(activo)) return;
+            if (activo && entraEnRevision(activo)) return;
             const primero = camposPendientesOrdenados(reporte.campos)[0];
             if (primero) setCampoActivoId(primero.id);
         },

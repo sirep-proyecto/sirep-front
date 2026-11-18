@@ -14,7 +14,7 @@
 import { ORDEN_CAMPOS, SECCIONES_FORMULARIO } from "@/config/campos-formulario";
 import { valorVigente } from "@/features/revision/lib/campos";
 import {
-    esDudoso,
+    entraEnRevision,
     fueResueltoPorPersona,
     requiereRevision,
 } from "@/features/revision/lib/dudosos";
@@ -237,7 +237,7 @@ export function construirSecciones(
         // En "solo dudosos" un elemento se queda si cualquiera de sus campos es
         // dudoso, y se muestra completo: un grupo a medias no se puede revisar.
         const visibles = opciones.soloDudosos
-            ? todos.filter((elemento) => elemento.campos.some(esDudoso))
+            ? todos.filter((elemento) => elemento.campos.some(entraEnRevision))
             : todos;
         if (visibles.length === 0) continue;
 
