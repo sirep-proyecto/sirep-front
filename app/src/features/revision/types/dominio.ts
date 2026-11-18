@@ -6,6 +6,8 @@
  * forma desde el backend (`sirep-back/src/reportes`).
  */
 
+import type { RespuestaEnvio, ResumenLote } from "@/features/revision/lib/envio-rptech";
+
 import type { DefinicionCampo, IdCampo, IdSeccion } from "./campos";
 import type { MapaRegiones, Region } from "./regiones";
 
@@ -160,6 +162,13 @@ export interface RepositorioReportes {
     campoId: IdCampo,
     accion: AccionRevision,
   ): Promise<Reporte>;
+  /**
+   * Envía un reporte revisado a RP-TECH (`PATCH /reportes/:numero/importar`).
+   * Lanza `ApiError` sin traducir: los textos del aviso salen de `lib/envio-rptech`.
+   */
+  enviarARptech(numero: string): Promise<RespuestaEnvio>;
+  /** Envía en lote todos los reportes listos (`POST /reportes/importar-lote`). */
+  enviarLoteARptech(): Promise<ResumenLote>;
 }
 
 export type { IdCampo, IdSeccion };

@@ -8,6 +8,10 @@
 
 import { ApiError, apiClient } from "@/lib/api";
 import type {
+  RespuestaEnvio,
+  ResumenLote,
+} from "@/features/revision/lib/envio-rptech";
+import type {
   AccionRevision,
   IdCampo,
   RepositorioReportes,
@@ -84,6 +88,22 @@ export function crearRepositorioApi(): RepositorioReportes {
       } catch (error) {
         throw traducirError(error);
       }
+    },
+
+    // El envío deja pasar el `ApiError` tal cual: `mensajeErrorEnvio` distingue
+    // 409 (rechazo de RP-TECH), 503 (RP-TECH caído) y 400 con el texto del servidor.
+    enviarARptech(numero: string) {
+      return apiClient.patch<RespuestaEnvio>(
+        `/reportes/${encodeURIComponent(numero)}/importar`,
+        undefined,
+        { cache: "no-store" },
+      );
+    },
+
+    enviarLoteARptech() {
+      return apiClient.post<ResumenLote>("/reportes/importar-lote", undefined, {
+        cache: "no-store",
+      });
     },
   };
 }
