@@ -39,6 +39,8 @@ export const ACCIONES_ACTIVIDAD: Record<string, string> = {
   excel_exportado: "Exportó a Excel",
   bot_conectado: "Conectó el bot",
   bot_desconectado: "Desconectó el bot",
+  ia_configurada: "Cambió la lectura con IA",
+  ia_clave_quitada: "Quitó una clave de IA",
   cuenta_creada: "Creó una cuenta",
   cuenta_actualizada: "Cambió una cuenta",
   cuenta_eliminada: "Eliminó una cuenta",
@@ -68,6 +70,12 @@ export function describirDetalle(registro: RegistroActividad): string {
       return texto(d.reporte) ? `Reporte N° ${texto(d.reporte)}` : "";
     case "bot_conectado":
       return texto(d.url);
+    case "ia_configurada": {
+      const nombre = texto(d.proveedor) === "openai" ? "ChatGPT" : texto(d.proveedor) === "gemini" ? "Gemini" : "";
+      return [nombre, d.clave_nueva ? "clave nueva" : ""].filter(Boolean).join(" · ");
+    }
+    case "ia_clave_quitada":
+      return texto(d.proveedor) === "openai" ? "ChatGPT" : texto(d.proveedor) === "gemini" ? "Gemini" : "";
     case "cuenta_creada":
       return `Cuenta «${texto(d.usuario)}» (${texto(d.rol)})`;
     case "cuenta_actualizada": {
