@@ -372,3 +372,16 @@ describe("coincideOpcion", () => {
         expect(coincideOpcion("Malo", "Bueno")).toBe(false);
     });
 });
+
+describe("vista 'Solo dudosos'", () => {
+    it("muestra un campo pendiente aunque el modelo lo haya leído con confianza alta", () => {
+        // La IA lo marcó dudoso (pasa con muchos reportes a la vez): el backend lo deja
+        // pendiente y antes solo se veía en "Todos los campos".
+        const secciones = construirSecciones(
+            reporteBase({ empresa: campo("empresa", { estado: "pendiente", confianza: "alta", valor: "ACME" }) }),
+            { soloDudosos: true },
+        );
+        const ids = secciones.flatMap((s) => s.elementos.flatMap((e) => e.campos.map((c) => c.id)));
+        expect(ids).toContain("empresa");
+    });
+});

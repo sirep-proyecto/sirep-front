@@ -10,7 +10,7 @@
 import { Insignia } from "@/components/ui/insignia";
 import {
     calcularPendientes,
-    esDudoso,
+    entraEnRevision,
     fueResueltoPorPersona,
     requiereRevision,
 } from "@/features/revision/lib/dudosos";
@@ -38,6 +38,7 @@ function clasificar(
     sinLectura: boolean,
     pendientes: number,
     hayBaja: boolean,
+    hayMedia: boolean,
 ): ClasificacionContador {
     if (sinLectura) {
         return {
@@ -48,13 +49,13 @@ function clasificar(
     if (pendientes === 0) {
         return { tono: "green", cualificador: "sin dudosos pendientes" };
     }
-    return hayBaja
-        ? { tono: "brick", cualificador: "con confianza baja o no leído" }
-        : { tono: "amber", cualificador: "de confianza media" };
+    if (hayBaja) return { tono: "brick", cualificador: "con confianza baja o no leído" };
+    // Pendientes con confianza alta: la IA o el backend los marcó para revisar.
+    return { tono: "amber", cualificador: hayMedia ? "de confianza media" : "marcados para revisar" };
 }
 
 export function CeldaDudosos({ campos, etiqueta, className }: CeldaDudososProps) {
-    const dudosos = campos.filter(esDudoso);
+    const dudosos = campos.filter(entraEnRevision);
     const pendientesDudosos = dudosos.filter(requiereRevision);
     const pendientes = calcularPendientes(campos);
 
@@ -64,10 +65,12 @@ export function CeldaDudosos({ campos, etiqueta, className }: CeldaDudososProps)
     const hayBaja = pendientesDudosos.some(
         (campo) => campo.no_leido || campo.confianza === "baja",
     );
+    const hayMedia = pendientesDudosos.some((campo) => campo.confianza === "media");
     const { tono, cualificador } = clasificar(
         sinLectura,
         pendientes.dudosos,
         hayBaja,
+        hayMedia,
     );
 
     const titulo = sinLectura

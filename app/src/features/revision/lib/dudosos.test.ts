@@ -16,6 +16,7 @@ import type {
 import { valorDeRespaldo, valorVigente } from "./campos";
 import {
     calcularPendientes,
+    entraEnRevision,
     fueResueltoPorPersona,
     requiereRevision,
     resumirDisposiciones,
@@ -101,3 +102,15 @@ describe("campos pendientes que el modelo leyó con confianza alta", () => {
     });
 });
 
+
+describe("campos que entran en revisión", () => {
+    it("incluye un pendiente leído con confianza alta (marcado dudoso por la IA)", () => {
+        const alta = campo("pendiente", { confianza: "alta", no_leido: false });
+        expect(entraEnRevision(alta)).toBe(true);
+        expect(calcularPendientes([alta])).toEqual({ total: 1, resueltos: 0, dudosos: 1 });
+    });
+
+    it("deja fuera un campo de confianza alta que no está pendiente", () => {
+        expect(entraEnRevision(campo("auto", { confianza: "alta", no_leido: false }))).toBe(false);
+    });
+});
