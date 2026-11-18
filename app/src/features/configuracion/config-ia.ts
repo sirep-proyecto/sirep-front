@@ -49,6 +49,13 @@ export function probarIa(datos: { proveedor: ProveedorIa; modelo: string; clave?
   return apiClient.post<{ ok: boolean; mensaje: string }>("/configuracion/ia/probar", datos, { timeoutMs: 25000 });
 }
 
+/** Modelos que puede usar la clave (la escrita o, si va vacía, la guardada), según el proveedor. */
+export function listarModelosIa(datos: { proveedor: ProveedorIa; clave?: string }) {
+  return apiClient.post<{ ok: boolean; modelos: string[]; mensaje: string }>("/configuracion/ia/modelos", datos, {
+    timeoutMs: 25000,
+  });
+}
+
 export function quitarClaveIa(proveedor: ProveedorIa): Promise<EstadoIa> {
   return apiClient.delete<EstadoIa>(`/configuracion/ia/clave/${proveedor}`, { timeoutMs: 15000 });
 }
