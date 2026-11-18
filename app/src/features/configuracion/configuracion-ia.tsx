@@ -8,7 +8,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { AlertTriangle, CheckCircle2, KeyRound, PlugZap, RefreshCw, Sparkles, Trash2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, KeyRound, ListChecks, PlugZap, RefreshCw, Sparkles, Trash2 } from "lucide-react";
 
 import { Boton } from "@/components/ui/boton";
 import { Entrada } from "@/components/ui/entrada";
@@ -22,6 +22,7 @@ import {
   describirClave,
   guardarIa,
   leerEstadoIa,
+  listarModelosIa,
   probarIa,
   quitarClaveIa,
   type EstadoIa,
@@ -45,7 +46,10 @@ export function ConfiguracionIa() {
   const [modelos, setModelos] = useState<Record<ProveedorIa, string>>(vacio);
   const [claves, setClaves] = useState<Record<ProveedorIa, string>>(vacio);
   const [cargando, setCargando] = useState(true);
-  const [trabajando, setTrabajando] = useState<"guardar" | "probar" | "quitar" | null>(null);
+  const [trabajando, setTrabajando] = useState<"guardar" | "probar" | "quitar" | "modelos" | null>(null);
+  // Modelos que de verdad tiene la clave, consultados al proveedor (null = aún no se consultó)
+  const [disponibles, setDisponibles] = useState<Record<ProveedorIa, string[] | null>>({ gemini: null, openai: null });
+  const [avisoModelos, setAvisoModelos] = useState<{ ok: boolean; mensaje: string } | null>(null);
   const [confirmarQuitar, setConfirmarQuitar] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -78,6 +82,7 @@ export function ConfiguracionIa() {
   function elegir(p: ProveedorIa) {
     setProveedor(p);
     setPrueba(null);
+    setAvisoModelos(null);
     setConfirmarQuitar(false);
     setAviso(null);
   }
@@ -108,6 +113,26 @@ export function ConfiguracionIa() {
       );
     } catch (e) {
       setPrueba({ ok: false, mensaje: mensajeDeError(e) });
+    } finally {
+      setTrabajando(null);
+    }
+  }
+
+  async function cargarModelos() {
+    setTrabajando("modelos");
+    setAvisoModelos(null);
+    try {
+      const r = await listarModelosIa({ proveedor, clave: claves[proveedor].trim() || undefined });
+      setAvisoModelos({ ok: r.ok, mensaje: r.mensaje });
+      if (r.ok) {
+        setDisponibles((d) => ({ ...d, [proveedor]: r.modelos }));
+        // Si el modelo escrito no está entre los de la clave, se propone el primero de la lista
+        if (r.modelos.length && !r.modelos.includes(modelos[proveedor].trim())) {
+          setModelos((m) => ({ ...m, [proveedor]: r.modelos[0] }));
+        }
+      }
+    } catch (e) {
+      setAvisoModelos({ ok: false, mensaje: mensajeDeError(e) });
     } finally {
       setTrabajando(null);
     }
@@ -220,21 +245,60 @@ export function ConfiguracionIa() {
             <label htmlFor="modelo-ia" className="text-meta font-medium text-ink">
               Modelo de {NOMBRE_PROVEEDOR[proveedor]}
             </label>
-            <Entrada
-              id="modelo-ia"
-              list={`modelos-${proveedor}`}
-              autoComplete="off"
-              spellCheck={false}
-              value={modelos[proveedor]}
-              onChange={(e) => setModelos((m) => ({ ...m, [proveedor]: e.target.value }))}
-              className="max-w-sm font-mono"
-            />
-            <datalist id={`modelos-${proveedor}`}>
-              {estado.modelos_sugeridos[proveedor].map((m) => (
-                <option key={m} value={m} />
-              ))}
-            </datalist>
-            <p className="text-micro text-muted">Elige de la lista o escribe otro nombre de modelo.</p>
+            <div className="flex flex-wrap items-center gap-2">
+              {disponibles[proveedor]?.length ? (
+                <select
+                  id="modelo-ia"
+                  value={modelos[proveedor]}
+                  onChange={(e) => setModelos((m) => ({ ...m, [proveedor]: e.target.value }))}
+                  className="h-9 w-full max-w-sm cursor-pointer rounded-sm border border-line-strong bg-inset px-3 font-mono text-base text-ink focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-petrol-600"
+                >
+                  {disponibles[proveedor]!.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <>
+                  <Entrada
+                    id="modelo-ia"
+                    list={`modelos-${proveedor}`}
+                    autoComplete="off"
+                    spellCheck={false}
+                    value={modelos[proveedor]}
+                    onChange={(e) => setModelos((m) => ({ ...m, [proveedor]: e.target.value }))}
+                    className="max-w-sm font-mono"
+                  />
+                  <datalist id={`modelos-${proveedor}`}>
+                    {estado.modelos_sugeridos[proveedor].map((m) => (
+                      <option key={m} value={m} />
+                    ))}
+                  </datalist>
+                </>
+              )}
+              <Boton
+                type="button"
+                variante="secundario"
+                tamano="sm"
+                onClick={() => void cargarModelos()}
+                disabled={trabajando !== null || !tieneClave}
+              >
+                <ListChecks className="size-4" aria-hidden="true" />
+                {trabajando === "modelos" ? "Consultando…" : "Ver modelos de mi clave"}
+              </Boton>
+            </div>
+            {avisoModelos ? (
+              <p role="status" className={`text-micro ${avisoModelos.ok ? "text-green-700" : "text-brick-700"}`}>
+                {avisoModelos.mensaje}
+              </p>
+            ) : (
+              <p className="text-micro text-muted">
+                {tieneClave
+                  ? "Pulsa \u201cVer modelos de mi clave\u201d para elegir entre los que tu cuenta puede usar, o escribe uno."
+                  : "Pega la API key para ver los modelos que tu cuenta puede usar."}
+              </p>
+            )}
           </div>
 
           <div className="mt-4 flex flex-col gap-2">
