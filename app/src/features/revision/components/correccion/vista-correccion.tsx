@@ -49,6 +49,8 @@ import {
 } from "@/features/revision/lib/descargas";
 import type { FormatoDescarga } from "@/features/revision/components/correccion/menu-descarga";
 import { useModoVisor } from "@/features/revision/hooks/use-modo-visor";
+import { useZoomVisor } from "@/features/revision/hooks/use-zoom-visor";
+import { campoEnPunto, PASO_ZOOM } from "@/features/revision/lib/visor";
 import { usePermiso } from "@/config/use-permiso";
 import { useRevisionReporte } from "@/features/revision/hooks/use-revision-reporte";
 import { useAtajosTeclado } from "@/features/revision/hooks/use-atajos-teclado";
@@ -67,7 +69,16 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
   const modoEdicion = modoEdicionElegido && puedeEditar;
   const [modalOriginal, setModalOriginal] = useState(false);
   const [paginaEscaneo, setPaginaEscaneo] = useState<NumeroPagina>(1);
-  const [zoomNivel, setZoomNivel] = useState(1);
+  // Zoom con botones, rueda del mouse y arrastre con la manito (ver use-zoom-visor).
+  const {
+    zoom: zoomVisor,
+    cambiarZoom,
+    refContenedor,
+    arrastrando,
+    alPresionar,
+    alClicCaptura,
+    alDobleClic,
+  } = useZoomVisor();
   // El recorte del campo activo es opcional: el resaltado sobre el propio
   // documento ya ubica el campo, así que solo se muestra si se pide con el ojo.
   const [verRecorte, setVerRecorte] = useState(false);
@@ -101,6 +112,20 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
   if (!revision.reporte) return null;
 
   const reporte = revision.reporte;
+
+  // Clic sobre la hoja: se elige el campo de ese lugar y se lleva su tarjeta a la vista.
+  // Si "Solo dudosos" lo oculta, se pasa a "Todos" para poder verlo.
+  const alClicHoja = (x: number, y: number) => {
+    const id = campoEnPunto(reporte.campos, paginaEscaneo, x, y);
+    if (!id) return;
+    const visible = revision.secciones.some((seccion) =>
+      [...seccion.elementos, ...seccion.automaticos].some((elemento) =>
+        elemento.campos.some((campo) => campo.id === id),
+      ),
+    );
+    if (!visible) revision.cambiarVista(false);
+    revision.seleccionar(id);
+  };
   const capasCorreccion = construirCapas(reporte.campos);
 
   // Cada revisión se guarda en el servidor al instante (ver repositorio-api),
@@ -219,7 +244,7 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
                 <button
                   type="button"
                   onClick={() =>
-                    setZoomNivel((z) => Math.max(z - 0.2, 0.8))
+                    cambiarZoom(zoomVisor - PASO_ZOOM)
                   }
                   title="Reducir zoom"
                   aria-label="Reducir zoom"
@@ -228,12 +253,12 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
                   <ZoomOut className="size-3.5" />
                 </button>
                 <span className="px-1 text-micro font-mono">
-                  {Math.round(zoomNivel * 100)}%
+                  {Math.round(zoomVisor * 100)}%
                 </span>
                 <button
                   type="button"
                   onClick={() =>
-                    setZoomNivel((z) => Math.min(z + 0.2, 2))
+                    cambiarZoom(zoomVisor + PASO_ZOOM)
                   }
                   title="Aumentar zoom"
                   aria-label="Aumentar zoom"
@@ -311,13 +336,22 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
 
           {/* Lienzo del escaneo */}
           <div
-            className="scroll-fino relative flex min-h-[420px] w-full items-start justify-center overflow-auto rounded-xs border border-line bg-sunken p-2 lg:min-h-0 lg:flex-1"
+            ref={refContenedor}
+            onPointerDown={alPresionar}
+            onClickCapture={alClicCaptura}
+            onDoubleClick={alDobleClic}
+            title="Rueda del mouse: zoom · Arrastra para mover · Clic en un campo para revisarlo · Doble clic: 100 %"
+            className={[
+              "scroll-fino relative flex min-h-[420px] w-full items-start justify-start overflow-auto rounded-xs border border-line bg-sunken p-2 select-none lg:min-h-0 lg:flex-1",
+              arrastrando ? "cursor-grabbing" : "cursor-grab",
+            ].join(" ")}
           >
             <LienzoEscaneo
               reporte={reporte}
               pagina={paginaEscaneo}
               modo={modoVisor}
-              zoom={zoomNivel}
+              zoom={zoomVisor}
+              onClicPunto={alClicHoja}
               capas={capasCorreccion}
               resaltado={
                 revision.campoActivo

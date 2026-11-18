@@ -53,6 +53,8 @@ interface HojaEscaneadaProps {
   /** Capa que se destaca (por hover o foco en la lista de correcciones). */
   capaResaltada?: string | null;
   onResaltarCapa?: (id: string | null) => void;
+  /** Clic sobre la hoja, en coordenadas 0–1 de la página. */
+  onClicPunto?: (x: number, y: number) => void;
   className?: string;
 }
 
@@ -71,6 +73,7 @@ export function HojaEscaneada({
   capas,
   capaResaltada = null,
   onResaltarCapa,
+  onClicPunto,
   className,
 }: HojaEscaneadaProps) {
   const ancho = mapa.ancho_pagina;
@@ -86,6 +89,18 @@ export function HojaEscaneada({
     <svg
       viewBox={`0 0 ${ancho} ${alto}`}
       className={twMerge("block h-full w-full", className)}
+      onClick={
+        onClicPunto
+          ? (evento) => {
+              const caja = evento.currentTarget.getBoundingClientRect();
+              if (caja.width <= 0 || caja.height <= 0) return;
+              onClicPunto(
+                (evento.clientX - caja.left) / caja.width,
+                (evento.clientY - caja.top) / caja.height,
+              );
+            }
+          : undefined
+      }
       role="group"
       aria-label={
         reporte

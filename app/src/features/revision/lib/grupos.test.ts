@@ -80,7 +80,8 @@ describe("grupoDeCampo", () => {
         expect(grupoDeCampo("hora_salida")?.id).toBe("horario");
         expect(grupoDeCampo("firma_cliente")?.id).toBe("firmas");
         expect(grupoDeCampo("empresa")).toBeNull();
-        expect(grupoDeCampo("garantia")).toBeNull();
+        expect(grupoDeCampo("garantia")?.id).toBe("labor");
+        expect(grupoDeCampo("facturado")?.id).toBe("labor");
     });
 });
 

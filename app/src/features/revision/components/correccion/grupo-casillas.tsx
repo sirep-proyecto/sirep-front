@@ -1,6 +1,7 @@
 /**
- * Responsabilidad: la tarjeta de casillas de revisión (estado del equipo,
- * limpieza, cabezales y sistema de protección) como controles segmentados.
+ * Responsabilidad: las tarjetas de casillas como controles segmentados: las de
+ * revisión (estado del equipo, limpieza, cabezales y sistema de protección) y
+ * las de información de la labor (garantía y facturado: marcada o sin marcar).
  * Existe porque en el papel son casillas para tildar, y el técnico las compara de
  * un vistazo: cada opción del papel es un segmento. Si una casilla está en
  * blanco, cada fila tiene su propio "Omitir": lo decide la persona, campo por campo.
@@ -25,6 +26,24 @@ interface ConfigCasilla {
     opciones: readonly string[];
     /** Además de las casillas hay un recuadro libre ("Otro"). */
     libre?: boolean;
+    /** Otras formas en que el modelo escribe cada opción (p. ej. "true" o "x" = Marcada). */
+    equivalentes?: Partial<Record<string, readonly string[]>>;
+}
+
+/** Garantía y facturado: el backend toma "Marcada" como sí y "Sin marcar" como no. */
+const MARCADA_SIN_MARCAR: Pick<ConfigCasilla, "opciones" | "equivalentes"> = {
+    opciones: ["Marcada", "Sin marcar"],
+    equivalentes: {
+        Marcada: ["true", "marcado", "x", "si", "sí", "yes", "1"],
+        "Sin marcar": ["false", "no", "0", "desmarcada", "sin marcar", "vacia", "vacía"],
+    },
+};
+
+function esOpcion(config: ConfigCasilla, valor: string, opcion: string): boolean {
+    return (
+        coincideOpcion(valor, opcion) ||
+        (config.equivalentes?.[opcion] ?? []).some((alias) => coincideOpcion(valor, alias))
+    );
 }
 
 const CONFIG_CASILLAS: Partial<Record<IdCampo, ConfigCasilla>> = {
@@ -36,6 +55,8 @@ const CONFIG_CASILLAS: Partial<Record<IdCampo, ConfigCasilla>> = {
         opciones: ["Estab.", "UPS"],
         libre: true,
     },
+    garantia: { rotulo: "Garantía", ...MARCADA_SIN_MARCAR },
+    facturado: { rotulo: "Facturado", ...MARCADA_SIN_MARCAR },
 };
 
 const OTRO = "Otro";
@@ -110,7 +131,7 @@ export function GrupoCasillas({
                     const original = vigente(campo.id);
                     const mostrado = (borrador[campo.id] ?? original).trim();
                     const opcionActual = config.opciones.find((opcion) =>
-                        coincideOpcion(mostrado, opcion),
+                        esOpcion(config, mostrado, opcion),
                     );
                     const enOtro = Boolean(config.libre) && otroAbierto;
                     // Un valor que no es ninguna casilla (ni "Otro") se muestra tal cual.
@@ -145,7 +166,7 @@ export function GrupoCasillas({
                                                 elegir(
                                                     campo.id,
                                                     // Si ya es esa casilla se conserva el texto del modelo.
-                                                    coincideOpcion(original, opcion) ? original : opcion,
+                                                    esOpcion(config, original, opcion) ? original : opcion,
                                                 )
                                             }
                                         />
