@@ -9,6 +9,8 @@ export interface UsuarioActual {
   nombre: string;
   iniciales: string;
   rol: string;
+  /** Acciones que esta cuenta puede hacer (las decide un administrador). */
+  permisos: string[];
 }
 
 interface SesionAlmacenada {
@@ -35,7 +37,20 @@ const USUARIO_POR_DEFECTO: UsuarioActual = {
   nombre: NOMBRE_FALLBACK,
   iniciales: calcularIniciales(NOMBRE_FALLBACK),
   rol: "Revisión técnica",
+  permisos: [],
 };
+
+const ETIQUETAS_ROL: Record<string, string> = {
+  admin: "Administrador",
+  supervisor: "Supervisor",
+  revisor: "Revisor",
+  operador: "Operador",
+};
+
+/** Nombre legible del rol (el backend manda admin, revisor u operador). */
+export function etiquetaRol(rol: string): string {
+  return ETIQUETAS_ROL[rol.trim().toLowerCase()] ?? rol;
+}
 
 let sesionEnMemoria: SesionAlmacenada | null = null;
 const oyentes = new Set<() => void>();
@@ -54,6 +69,8 @@ function leerSesionStorage(): SesionAlmacenada | null {
     if (!crudo) return null;
     const parsed = JSON.parse(crudo) as SesionAlmacenada;
     if (!parsed?.token || !parsed?.usuario?.nombre) return null;
+    // Las sesiones guardadas antes de los permisos no los traen: se completan al refrescar.
+    if (!Array.isArray(parsed.usuario.permisos)) parsed.usuario.permisos = [];
     sesionEnMemoria = parsed;
     return parsed;
   } catch {
@@ -71,7 +88,13 @@ export function obtenerUsuarioSesion(): UsuarioActual | null {
 
 export function guardarSesion(
   token: string,
-  datos: { id: string; email?: string; nombre: string; rol?: string },
+  datos: {
+    id: string;
+    email?: string;
+    nombre: string;
+    rol?: string;
+    permisos?: string[];
+  },
 ): UsuarioActual {
   const nombreLimpio = datos.nombre.trim() || datos.email || "Revisor";
   const usuario: UsuarioActual = {
@@ -80,6 +103,7 @@ export function guardarSesion(
     nombre: nombreLimpio,
     iniciales: calcularIniciales(nombreLimpio),
     rol: datos.rol?.trim() || "Revisión técnica",
+    permisos: Array.isArray(datos.permisos) ? datos.permisos : [],
   };
   sesionEnMemoria = { token, usuario };
   if (typeof window !== "undefined") {
@@ -94,6 +118,48 @@ export function guardarSesion(
   }
   notificarCambio();
   return usuario;
+}
+
+/** Actualiza nombre, rol y permisos de la sesión activa sin pedir otro inicio de sesión. */
+export function actualizarUsuarioSesion(datos: {
+  nombre: string;
+  rol?: string;
+  permisos?: string[];
+}): void {
+  const actual = leerSesionStorage();
+  if (!actual) return;
+  const nombre = datos.nombre.trim() || actual.usuario.nombre;
+  const permisos = Array.isArray(datos.permisos) ? datos.permisos : [];
+  const rol = datos.rol?.trim() || actual.usuario.rol;
+  const igual =
+    nombre === actual.usuario.nombre &&
+    rol === actual.usuario.rol &&
+    permisos.length === actual.usuario.permisos.length &&
+    permisos.every((p) => actual.usuario.permisos.includes(p));
+  if (igual) return;
+
+  sesionEnMemoria = {
+    token: actual.token,
+    usuario: {
+      ...actual.usuario,
+      nombre,
+      iniciales: calcularIniciales(nombre),
+      rol,
+      permisos,
+    },
+  };
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage.setItem(CLAVE_STORAGE, JSON.stringify(sesionEnMemoria));
+    } catch {
+      // Si localStorage está bloqueado, se mantiene en memoria.
+    }
+  }
+  notificarCambio();
+}
+
+export function tienePermiso(permiso: string): boolean {
+  return leerSesionStorage()?.usuario.permisos.includes(permiso) ?? false;
 }
 
 export function cerrarSesion(): void {
@@ -136,5 +202,8 @@ export const USUARIO_ACTUAL: UsuarioActual = {
   },
   get rol() {
     return leerSesionStorage()?.usuario.rol ?? USUARIO_POR_DEFECTO.rol;
+  },
+  get permisos() {
+    return leerSesionStorage()?.usuario.permisos ?? USUARIO_POR_DEFECTO.permisos;
   },
 };

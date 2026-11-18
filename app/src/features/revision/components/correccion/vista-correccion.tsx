@@ -49,6 +49,7 @@ import {
 } from "@/features/revision/lib/descargas";
 import type { FormatoDescarga } from "@/features/revision/components/correccion/menu-descarga";
 import { useModoVisor } from "@/features/revision/hooks/use-modo-visor";
+import { usePermiso } from "@/config/use-permiso";
 import { useRevisionReporte } from "@/features/revision/hooks/use-revision-reporte";
 import { useAtajosTeclado } from "@/features/revision/hooks/use-atajos-teclado";
 import type { NumeroPagina } from "@/features/revision/types/regiones";
@@ -59,8 +60,11 @@ interface VistaCorreccionProps {
 
 export function VistaCorreccion({ numero }: VistaCorreccionProps) {
   const revision = useRevisionReporte(numero);
+  const puedeEditar = usePermiso("editar_campos");
 
-  const [modoEdicion, setModoEdicion] = useState(false);
+  const [modoEdicionElegido, setModoEdicion] = useState(false);
+  // Sin permiso de edición el reporte queda en solo lectura aunque se intente activar.
+  const modoEdicion = modoEdicionElegido && puedeEditar;
   const [modalOriginal, setModalOriginal] = useState(false);
   const [paginaEscaneo, setPaginaEscaneo] = useState<NumeroPagina>(1);
   const [zoomNivel, setZoomNivel] = useState(1);
@@ -357,6 +361,7 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
             enCurso={revision.campoEnCurso !== null}
             errorAccion={revision.errorAccion}
             modoEdicion={modoEdicion}
+            puedeEditar={puedeEditar}
             onAlternarEdicion={() => setModoEdicion((prev) => !prev)}
             onCambiarVista={revision.cambiarVista}
             acciones={{

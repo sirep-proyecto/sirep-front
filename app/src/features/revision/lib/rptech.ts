@@ -4,8 +4,8 @@
  * Existe para que la bandeja, la cabecera del reporte y el aviso de rechazo
  * usen la misma regla y el mismo texto.
  *
- * Contrato: docs/contrato-historico.md. El envío es manual: botón "Enviar" de
- * cada reporte o "Enviar completados a RP-TECH" en la bandeja.
+ * Contrato: docs/contrato-historico.md. El backend de SIREP envía solo el
+ * reporte al terminar de revisarlo; aquí solo se muestra el resultado.
  */
 
 import type { ErrorRptech, Reporte } from "@/features/revision/types/dominio";
@@ -39,12 +39,12 @@ export const ETIQUETAS_RPTECH: Record<
   },
   reintentar: {
     etiqueta: "Envío pendiente",
-    descripcion: "No hubo respuesta de RP-TECH. Vuelve a enviarlo con el botón Reenviar.",
+    descripcion: "No hubo respuesta de RP-TECH. Se reintenta en el próximo envío.",
     tono: "amber",
   },
   por_enviar: {
     etiqueta: "Por enviar",
-    descripcion: "Revisado. Envíalo con el botón Enviar o con Enviar completados.",
+    descripcion: "Revisado. Se enviará a RP-TECH en el próximo envío.",
     tono: "neutral",
   },
 };

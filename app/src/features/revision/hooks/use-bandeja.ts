@@ -14,7 +14,6 @@ import {
   filtrarReportes,
   hayFiltrosActivos,
 } from "@/features/revision/lib/filtros";
-import { contarPorEnviar } from "@/features/revision/lib/envio-rptech";
 import { ordenarReportes } from "@/features/revision/lib/orden";
 import { calcularResumenBandeja } from "@/features/revision/lib/resumen";
 import { useTiempoReal } from "@/features/revision/hooks/use-tiempo-real";
@@ -38,8 +37,6 @@ export interface UsoBandeja {
   reportes: Reporte[];
   /** Carga total, para el "de N" del contador de resultados. */
   totalArchivo: number;
-  /** Reportes por enviar a RP-TECH de TODO el archivo, no solo los visibles. */
-  porEnviar: number;
   filtros: FiltrosBandeja;
   orden: OrdenBandeja;
   filtrosActivos: boolean;
@@ -169,7 +166,6 @@ export function useBandeja(): UsoBandeja {
     resumen,
     reportes,
     totalArchivo: reportesArchivo.length,
-    porEnviar: contarPorEnviar(reportesArchivo),
     filtros,
     orden,
     filtrosActivos: hayFiltrosActivos(filtros),

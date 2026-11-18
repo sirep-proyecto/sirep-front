@@ -201,7 +201,7 @@ export function ProtectorSesion({ children }: ProtectorSesionProps) {
               id="login-usuario"
               type="text"
               autoComplete="username"
-              placeholder="Ej. valentino o david"
+              placeholder="Tu usuario"
               value={identificador}
               onChange={(e) => setIdentificador(e.target.value)}
               disabled={cargando}

@@ -8,7 +8,6 @@
 
 "use client";
 
-import { AvisoEnvioRptech } from "@/features/revision/components/bandeja/aviso-envio";
 import { BarraHerramientas } from "@/features/revision/components/bandeja/barra-herramientas";
 import { EstadosBandeja } from "@/features/revision/components/bandeja/estados-bandeja";
 import { ListaTarjetas } from "@/features/revision/components/bandeja/lista-tarjetas";
@@ -18,14 +17,12 @@ import { useEffect } from "react";
 
 import { BotonSubirReportes } from "@/features/revision/components/subida/boton-subir-reportes";
 import { ZonaSoltarPagina } from "@/features/revision/components/subida/zona-soltar-pagina";
-import { useEnvioRptech } from "@/features/revision/hooks/use-envio-rptech";
 import { useBandeja } from "@/features/revision/hooks/use-bandeja";
 import { useSubida } from "@/features/revision/providers/subida-contexto";
 
 export default function PaginaBandeja() {
   const bandeja = useBandeja();
   const { estado: subida } = useSubida();
-  const envio = useEnvioRptech(bandeja.refrescar);
 
   // Cada reporte que termina de leer la IA se refleja en la bandeja de
   // inmediato, sin esperar al aviso en vivo (que puede no llegar).
@@ -76,14 +73,9 @@ export default function PaginaBandeja() {
             onCambioOrigen={bandeja.establecerOrigen}
             onCambioOrden={bandeja.establecerOrden}
             onLimpiar={bandeja.limpiarFiltros}
-            porEnviar={bandeja.porEnviar}
-            enviandoLote={envio.enviandoLote}
-            onEnviarLote={envio.enviarLote}
           />
         </>
       ) : null}
-
-      <AvisoEnvioRptech aviso={envio.aviso} onCerrar={envio.cerrarAviso} />
 
       {bandeja.estadoCarga === "cargando" ? (
         <EstadosBandeja estado="cargando" />
@@ -106,17 +98,8 @@ export default function PaginaBandeja() {
 
       {conResultados ? (
         <>
-          <TablaReportes
-            reportes={bandeja.reportes}
-            ruta="/reportes/"
-            enviando={envio.enviando}
-            onEnviar={envio.enviar}
-          />
-          <ListaTarjetas
-            reportes={bandeja.reportes}
-            enviando={envio.enviando}
-            onEnviar={envio.enviar}
-          />
+          <TablaReportes reportes={bandeja.reportes} ruta="/reportes/"/>
+          <ListaTarjetas reportes={bandeja.reportes}/>
         </>
       ) : null}
     </div>

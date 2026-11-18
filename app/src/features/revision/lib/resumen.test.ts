@@ -124,9 +124,9 @@ describe("calcularResumenBandeja", () => {
 
     const resumen = calcularResumenBandeja(reportes, new Date(2026, 10, 2));
 
-    // Media, baja y no leído pendientes suman; alta no es dudosa y los ya
-    // confirmados o corregidos ya no cuentan: la cifra baja al revisar.
-    expect(resumen.campos_dudosos).toBe(3);
+    // Todo campo pendiente suma, aunque el modelo lo leyera con confianza alta; los ya
+    // confirmados o corregidos no cuentan: la cifra baja al revisar.
+    expect(resumen.campos_dudosos).toBe(4);
   });
 
   it("cuenta completados hoy por completado_en en fecha local, no por actualizado_en", () => {
@@ -180,12 +180,66 @@ describe("calcularResumenBandeja", () => {
     }
   });
 
-  it("un archivo sin reportes devuelve cero en las cuatro cifras", () => {
+  it("un archivo sin reportes devuelve cero en todas las cifras", () => {
     expect(calcularResumenBandeja([], new Date(2026, 10, 2))).toEqual({
       reportes_pendientes: 0,
       campos_dudosos: 0,
+      reportes_con_dudosos: 0,
       completados: 0,
+      revisores_hoy: [],
       total: 0,
     });
+  });
+
+  it("cuenta como pendiente un campo con estado pendiente aunque el modelo lo leyera con confianza alta", () => {
+    const reportes = [
+      crearReporte("000485", {
+        estado: "en_revision",
+        campos: [crearCampo("alta", "pendiente"), crearCampo("alta", "confirmado")],
+      }),
+    ];
+    const resumen = calcularResumenBandeja(reportes, new Date(2026, 10, 2));
+    expect(resumen.reportes_pendientes).toBe(1);
+    // Antes este campo no se contaba y el reporte aparecía "en revisión" con 0 dudosos.
+    expect(resumen.campos_dudosos).toBe(1);
+    expect(resumen.reportes_con_dudosos).toBe(1);
+  });
+
+  it("completados hoy usa la última intervención de una persona y no la fecha de guardado", () => {
+    const hoy = new Date(2026, 10, 18, 12, 0, 0);
+    const campoHecho = (en: string) => ({
+      ...crearCampo("media", "confirmado"),
+      revisado_por: "Ana",
+      revisado_en: en,
+    });
+    const reportes = [
+      // Se revisó ayer; solo se volvió a guardar hoy (por ejemplo, al enviarse a RP-TECH).
+      crearReporte("000001", {
+        estado: "completo",
+        campos: [campoHecho(new Date(2026, 10, 17, 15, 0, 0).toISOString())],
+        completado_en: new Date(2026, 10, 18, 9, 0, 0).toISOString(),
+      }),
+      // Se revisó hoy.
+      crearReporte("000002", {
+        estado: "completo",
+        campos: [campoHecho(new Date(2026, 10, 18, 10, 0, 0).toISOString())],
+        completado_en: new Date(2026, 10, 18, 10, 0, 0).toISOString(),
+      }),
+    ];
+    const resumen = calcularResumenBandeja(reportes, hoy);
+    expect(resumen.completados).toBe(1);
+    expect(resumen.revisores_hoy).toEqual(["Ana"]);
+  });
+
+  it("si nadie intervino, completados hoy usa la fecha de completado del reporte", () => {
+    const hoy = new Date(2026, 10, 18, 12, 0, 0);
+    const reportes = [
+      crearReporte("000003", {
+        estado: "completo",
+        campos: [crearCampo("alta", "auto")],
+        completado_en: new Date(2026, 10, 18, 8, 0, 0).toISOString(),
+      }),
+    ];
+    expect(calcularResumenBandeja(reportes, hoy).completados).toBe(1);
   });
 });

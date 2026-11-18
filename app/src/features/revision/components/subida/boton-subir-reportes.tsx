@@ -10,10 +10,15 @@
 import { Loader2, Upload } from "lucide-react";
 
 import { Boton } from "@/components/ui/boton";
+import { usePermiso } from "@/config/use-permiso";
 import { useSubida } from "@/features/revision/providers/subida-contexto";
 
 export function BotonSubirReportes() {
   const { abrirPanel, avance } = useSubida();
+  const puedeSubir = usePermiso("subir_escaneos");
+
+  // Sin permiso el botón no aparece (el backend también lo rechazaría).
+  if (!puedeSubir) return null;
 
   return (
     <Boton variante="primario" tamano="lg" onClick={abrirPanel} aria-haspopup="dialog">

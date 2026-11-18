@@ -14,8 +14,8 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-import { BotonEnviarRptech } from "@/features/revision/components/bandeja/boton-enviar-rptech";
 import { CeldaDudosos } from "@/features/revision/components/bandeja/celda-dudosos";
+import { CeldaRevisores } from "@/features/revision/components/bandeja/celda-revisores";
 import { EtiquetaEstado } from "@/features/revision/components/comunes/etiqueta-estado";
 import { EtiquetaOrigen } from "@/features/revision/components/comunes/etiqueta-origen";
 import { EtiquetaRptech } from "@/features/revision/components/comunes/etiqueta-rptech";
@@ -30,16 +30,11 @@ const ELEMENTOS_POR_PAGINA = 10;
 interface TablaReportesProps {
   reportes: readonly Reporte[];
   ruta: string;
-  /** Sin `onEnviar` (vista de calibración) no se muestran botones de envío. */
-  enviando?: ReadonlySet<string>;
-  onEnviar?: (numero: string) => void;
 }
 
 interface FilaReporteProps {
   reporte: Reporte;
   ruta: string;
-  enviando: boolean;
-  onEnviar?: (numero: string) => void;
 }
 
 const CLASE_CELDA = "border-b border-line px-4 py-2.5";
@@ -47,7 +42,7 @@ const CLASE_CELDA = "border-b border-line px-4 py-2.5";
 const CLASE_CABECERA =
   "border-b border-line px-4 py-3 text-left text-micro font-medium uppercase tracking-label text-muted";
 
-function FilaReporte({ reporte, ruta, enviando, onEnviar }: FilaReporteProps) {
+function FilaReporte({ reporte, ruta }: FilaReporteProps) {
   const {
     numero_reporte,
     cliente,
@@ -64,7 +59,7 @@ function FilaReporte({ reporte, ruta, enviando, onEnviar }: FilaReporteProps) {
       <td className={CLASE_CELDA}>
         {/*
          * El `::after` extendido usa la fila como bloque contenedor (por eso
-         * la fila es `relative`): cubre las ocho columnas, así el clic en
+         * la fila es `relative`): cubre todas las columnas, así el clic en
          * cualquier punto navega y el foco visible se dibuja sobre la fila
          * completa. El nombre accesible agrega el cliente porque el texto
          * visible solo dice el N°.
@@ -97,13 +92,11 @@ function FilaReporte({ reporte, ruta, enviando, onEnviar }: FilaReporteProps) {
       <td className={CLASE_CELDA}>
         <CeldaDudosos campos={campos} />
       </td>
+      <td className={CLASE_CELDA}>
+        <CeldaRevisores campos={campos} />
+      </td>
       <td className={`${CLASE_CELDA} font-mono text-meta text-faint`}>
-        <div className="flex flex-wrap items-center gap-2">
-          <span>{formatearFecha(fecha_reporte)}</span>
-          {onEnviar ? (
-            <BotonEnviarRptech reporte={reporte} enviando={enviando} onEnviar={onEnviar} />
-          ) : null}
-        </div>
+        {formatearFecha(fecha_reporte)}
       </td>
     </tr>
   );
@@ -125,7 +118,7 @@ function generarNumerosPagina(actual: number, total: number): (number | "...")[]
   return [1, "...", actual - 1, actual, actual + 1, "...", total];
 }
 
-export function TablaReportes({ reportes, ruta, enviando = new Set(), onEnviar }: TablaReportesProps) {
+export function TablaReportes({ reportes, ruta }: TablaReportesProps) {
   const [paginaActual, setPaginaActual] = useState(1);
 
   const totalPaginas = Math.max(1, Math.ceil(reportes.length / ELEMENTOS_POR_PAGINA));
@@ -147,7 +140,7 @@ export function TablaReportes({ reportes, ruta, enviando = new Set(), onEnviar }
         <table className="w-full border-collapse">
           <caption className="sr-only">
             Reportes de la bandeja: número, cliente, equipo, técnico, estado,
-            origen, dudosos pendientes y fecha del reporte.
+            origen, dudosos pendientes, quién lo revisó y fecha del reporte.
           </caption>
           <thead>
             <tr className="bg-sunken/70">
@@ -173,19 +166,16 @@ export function TablaReportes({ reportes, ruta, enviando = new Set(), onEnviar }
                 Dudosos pendientes
               </th>
               <th scope="col" className={CLASE_CABECERA}>
+                Revisado por
+              </th>
+              <th scope="col" className={CLASE_CABECERA}>
                 Fecha
               </th>
             </tr>
           </thead>
           <tbody>
             {reportesPaginados.map((reporte) => (
-              <FilaReporte
-                key={reporte.id}
-                reporte={reporte}
-                ruta={ruta}
-                enviando={enviando.has(reporte.numero_reporte)}
-                onEnviar={onEnviar}
-              />
+              <FilaReporte key={reporte.id} reporte={reporte} ruta={ruta} />
             ))}
           </tbody>
         </table>

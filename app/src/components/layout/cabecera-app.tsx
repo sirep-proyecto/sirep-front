@@ -16,12 +16,14 @@ import { Boton } from "@/components/ui/boton";
 import { MOSTRAR_CALIBRACION } from "@/config/entorno";
 import {
   cerrarSesion,
+  etiquetaRol,
   obtenerUsuarioSesion,
   suscribirSesion,
   USUARIO_ACTUAL,
   type UsuarioActual,
 } from "@/config/sesion";
-import { descargarExcelReportes } from "@/lib/api";
+import { usePermiso } from "@/config/use-permiso";
+import { descargarExcelReportes, refrescarSesionApi } from "@/lib/api";
 
 import { IndicadorEnVivo } from "./indicador-en-vivo";
 
@@ -64,9 +66,12 @@ export function CabeceraApp() {
     null,
   );
   const [exportando, setExportando] = useState(false);
+  const puedeExportar = usePermiso("exportar");
 
   useEffect(() => {
     setUsuarioSesion(obtenerUsuarioSesion());
+    // Pone al día el rol y los permisos por si un administrador los cambió.
+    void refrescarSesionApi();
     return suscribirSesion(() => {
       setUsuarioSesion(obtenerUsuarioSesion());
     });
@@ -147,6 +152,7 @@ export function CabeceraApp() {
                 <Settings className="size-4" aria-hidden="true" />
                 <span className="max-sm:sr-only">Configuración</span>
               </Link>
+              {puedeExportar ? (
               <Boton
                 variante="secundario"
                 tamano="sm"
@@ -160,6 +166,7 @@ export function CabeceraApp() {
                   {exportando ? "Exportando..." : "Exportar Excel"}
                 </span>
               </Boton>
+              ) : null}
             </nav>
 
             {/* En el celular no cabe junto al menú: se oculta para que no haya desplazamiento horizontal */}
@@ -179,7 +186,7 @@ export function CabeceraApp() {
                   {usuarioVisible.nombre}
                 </span>
                 <span className="mt-1 text-micro uppercase tracking-label text-faint">
-                  {usuarioVisible.rol}
+                  {etiquetaRol(usuarioVisible.rol)}
                 </span>
               </span>
               <Boton

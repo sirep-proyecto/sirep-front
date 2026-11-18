@@ -46,14 +46,22 @@ export function contarPendientes(campos: readonly CampoReporte[]): number {
     return campos.filter(requiereRevision).length;
 }
 
+/**
+ * Pendientes = campos que de verdad frenan el cierre del reporte (estado "pendiente"),
+ * sean dudosos por cómo los leyó el modelo o marcados para revisión por el backend.
+ * Así el contador coincide con el estado "En revisión" del reporte: antes un campo
+ * pendiente con confianza alta no se contaba y el reporte parecía no tener nada por revisar.
+ */
 export function calcularPendientes(
     campos: readonly CampoReporte[],
 ): PendientesRevision {
-    const dudosos = campos.filter(esDudoso);
+    const involucrados = campos.filter(
+        (campo) => esDudoso(campo) || requiereRevision(campo),
+    );
     return {
-        total: dudosos.length,
-        resueltos: dudosos.filter(fueResueltoPorPersona).length,
-        dudosos: dudosos.filter(requiereRevision).length,
+        total: involucrados.length,
+        resueltos: involucrados.filter(fueResueltoPorPersona).length,
+        dudosos: involucrados.filter(requiereRevision).length,
     };
 }
 

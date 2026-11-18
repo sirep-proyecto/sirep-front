@@ -9,7 +9,6 @@
 
 import { Search, X } from "lucide-react";
 
-import { BotonEnviarCompletados } from "@/features/revision/components/bandeja/boton-enviar-completados";
 import { Boton } from "@/components/ui/boton";
 import { Entrada } from "@/components/ui/entrada";
 import {
@@ -37,11 +36,6 @@ interface BarraHerramientasProps {
     onCambioOrigen: (valor: FiltroOrigen) => void;
     onCambioOrden: (valor: OrdenBandeja) => void;
     onLimpiar: () => void;
-    /** Reportes por enviar (`por_enviar` + `reintentar`) de todo el archivo cargado. */
-    porEnviar?: number;
-    enviandoLote?: boolean;
-    /** Sin esta función no se muestra el botón de envío en lote. */
-    onEnviarLote?: () => void;
 }
 
 /**
@@ -93,9 +87,6 @@ export function BarraHerramientas({
     onCambioOrigen,
     onCambioOrden,
     onLimpiar,
-    porEnviar = 0,
-    enviandoLote = false,
-    onEnviarLote,
 }: BarraHerramientasProps) {
     return (
         <div className="border-b border-line py-4">
@@ -200,19 +191,9 @@ export function BarraHerramientas({
                     </div>
                 ) : null}
 
-                {onEnviarLote ? (
-                    <div className="w-full md:ml-auto md:w-auto">
-                        <BotonEnviarCompletados
-                            cantidad={porEnviar}
-                            enviando={enviandoLote}
-                            onConfirmar={onEnviarLote}
-                        />
-                    </div>
-                ) : null}
-
                 <p
                     aria-live="polite"
-                    className="w-full pt-1 text-meta text-muted md:w-auto md:pt-0 md:text-right"
+                    className="w-full pt-1 text-meta text-muted md:ml-auto md:w-auto md:pt-0 md:text-right"
                 >
                     Mostrando{" "}
                     <span className="font-mono text-ink">{resultados}</span> de{" "}

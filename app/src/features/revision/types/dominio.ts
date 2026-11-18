@@ -8,7 +8,6 @@
 
 import type { DefinicionCampo, IdCampo, IdSeccion } from "./campos";
 import type { MapaRegiones, Region } from "./regiones";
-import type { RespuestaEnvio, ResumenLote } from "@/features/revision/lib/envio-rptech";
 
 export type Confianza = "alta" | "media" | "baja";
 
@@ -121,7 +120,11 @@ export interface PendientesRevision {
 export interface ResumenBandeja {
   reportes_pendientes: number;
   campos_dudosos: number;
+  /** Cuántos reportes tienen al menos un campo pendiente. */
+  reportes_con_dudosos: number;
   completados: number;
+  /** Cuentas que confirmaron o corrigieron algún campo hoy. */
+  revisores_hoy: string[];
   total: number;
 }
 
@@ -157,10 +160,6 @@ export interface RepositorioReportes {
     campoId: IdCampo,
     accion: AccionRevision,
   ): Promise<Reporte>;
-  /** Envía un reporte histórico completo a RP-TECH. Lanza el error HTTP tal cual para mostrar su mensaje. */
-  enviarARptech(numero: string): Promise<RespuestaEnvio>;
-  /** Envía todos los históricos completos aún no enviados (puede tardar minutos). */
-  enviarLoteARptech(): Promise<ResumenLote>;
 }
 
 export type { IdCampo, IdSeccion };

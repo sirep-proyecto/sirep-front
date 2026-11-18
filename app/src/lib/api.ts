@@ -5,6 +5,7 @@
  */
 
 import {
+  actualizarUsuarioSesion,
   cerrarSesion,
   guardarSesion,
   obtenerTokenSesion,
@@ -166,6 +167,7 @@ export interface RespuestaLogin {
     email: string;
     nombre: string;
     rol: string;
+    permisos?: string[];
   };
 }
 
@@ -183,6 +185,27 @@ export async function iniciarSesionApi(
   });
 
   return guardarSesion(respuesta.access_token, respuesta.usuario);
+}
+
+/**
+ * Vuelve a leer del backend el rol y los permisos de la cuenta, para que un cambio
+ * hecho por un administrador se note sin cerrar sesión. Si falla, no toca la sesión.
+ */
+export async function refrescarSesionApi(): Promise<void> {
+  if (!obtenerTokenSesion()) return;
+  try {
+    const { usuario } = await apiClient.get<{ usuario: RespuestaLogin["usuario"] }>(
+      "/auth/me",
+      { cache: "no-store" },
+    );
+    actualizarUsuarioSesion({
+      nombre: usuario.nombre,
+      rol: usuario.rol,
+      permisos: usuario.permisos ?? [],
+    });
+  } catch {
+    // Sin conexión o sesión vencida (api.ts ya cierra la sesión en el 401): se deja como está.
+  }
 }
 
 /**

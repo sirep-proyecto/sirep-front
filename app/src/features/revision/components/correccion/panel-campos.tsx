@@ -49,6 +49,8 @@ interface PanelCamposProps {
     errorAccion?: ErrorAccion | null;
     /** Modo de edición activado por el técnico. */
     modoEdicion?: boolean;
+    /** `false` cuando la cuenta no tiene permiso de edición: el botón queda inactivo. */
+    puedeEditar?: boolean;
     onAlternarEdicion: () => void;
     onCambiarVista: (soloDudosos: boolean) => void;
     acciones: AccionesCampo;
@@ -69,6 +71,7 @@ export function PanelCampos({
     enCurso,
     errorAccion,
     modoEdicion = false,
+    puedeEditar = true,
     onAlternarEdicion,
     onCambiarVista,
     acciones,
@@ -134,6 +137,12 @@ export function PanelCampos({
                         variante={modoEdicion ? "primario" : "secundario"}
                         tamano="sm"
                         onClick={onAlternarEdicion}
+                        disabled={!puedeEditar}
+                        title={
+                            puedeEditar
+                                ? undefined
+                                : "Tu cuenta no tiene permiso para editar reportes"
+                        }
                         aria-pressed={modoEdicion}
                         aria-label={
                             modoEdicion ? "Desactivar modo edición" : "Activar modo edición"

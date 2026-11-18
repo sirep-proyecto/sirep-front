@@ -84,3 +84,20 @@ describe("estado omitido", () => {
         expect(ETIQUETAS_REVISION.omitido.etiqueta).toBe("Omitido");
     });
 });
+
+describe("campos pendientes que el modelo leyó con confianza alta", () => {
+    it("cuentan como pendientes porque frenan el cierre del reporte", () => {
+        const pendienteAlta = campo("pendiente", { confianza: "alta", no_leido: false });
+        expect(calcularPendientes([pendienteAlta])).toEqual({
+            total: 1,
+            resueltos: 0,
+            dudosos: 1,
+        });
+    });
+
+    it("un campo de confianza alta ya confirmado sin ser dudoso no entra en la cuenta", () => {
+        const sinDuda = campo("auto", { confianza: "alta", no_leido: false });
+        expect(calcularPendientes([sinDuda])).toEqual({ total: 0, resueltos: 0, dudosos: 0 });
+    });
+});
+

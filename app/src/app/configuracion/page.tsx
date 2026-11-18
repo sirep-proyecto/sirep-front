@@ -1,11 +1,12 @@
 /**
- * Responsabilidad: página de Configuración. Hoy tiene el bot de Telegram:
- * a qué backend de SIREP le llegan sus mensajes y cambiarlo.
+ * Responsabilidad: página de Configuración. Tiene el bot de Telegram (a qué
+ * backend le llegan sus mensajes) y, para administradores, las cuentas de
+ * usuario y lo que puede hacer cada una.
  */
 
 import type { Metadata } from "next";
 
-import { ConfiguracionBot } from "@/features/configuracion/configuracion-bot";
+import { ConfiguracionPestanas } from "@/features/configuracion/configuracion-pestanas";
 
 export const metadata: Metadata = { title: "Configuración" };
 
@@ -18,9 +19,11 @@ export default function PaginaConfiguracion() {
           Sistema
         </p>
         <h1 className="text-display font-semibold tracking-tight text-ink">Configuración</h1>
-        <p className="mt-2 text-base text-muted">El bot de Telegram: a qué dirección de este backend le llegan los reportes que se mandan por el bot.</p>
+        <p className="mt-2 text-base text-muted">
+          El bot de Telegram y, para administradores, las cuentas de usuario, lo que puede hacer cada una y su actividad.
+        </p>
       </header>
-      <ConfiguracionBot />
+      <ConfiguracionPestanas />
     </div>
   );
 }

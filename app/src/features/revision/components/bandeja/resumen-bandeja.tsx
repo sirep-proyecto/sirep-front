@@ -1,6 +1,6 @@
 /**
  * Responsabilidad: mostrar las tres cifras del archivo —reportes pendientes,
- * campos dudosos y completados hoy—.
+ * campos dudosos y completados hoy— con una línea que explica cada una.
  * Existe porque la primera mirada del técnico responde "¿cuánto trabajo hay?"
  * antes de tocar un filtro. Cada cifra lleva su color de estado (ámbar =
  * pendiente, rojo = dudoso, verde = completo) además del texto, nunca color solo.
@@ -29,9 +29,11 @@ interface CifraProps {
   valor: number;
   tono: Tono;
   Icono: LucideIcon;
+  /** Línea corta bajo la cifra que explica de qué está hecha. */
+  detalle?: string;
 }
 
-function Cifra({ etiqueta, valor, tono, Icono }: CifraProps) {
+function Cifra({ etiqueta, valor, tono, Icono, detalle }: CifraProps) {
   const clases = TONOS[tono];
 
   return (
@@ -48,6 +50,11 @@ function Cifra({ etiqueta, valor, tono, Icono }: CifraProps) {
           <dd className="mt-1.5 font-mono text-display font-semibold tabular-nums text-ink">
             {valor}
           </dd>
+          {detalle ? (
+            <p className="mt-1 max-w-[16rem] truncate text-meta text-muted" title={detalle}>
+              {detalle}
+            </p>
+          ) : null}
         </div>
         <span
           aria-hidden="true"
@@ -58,6 +65,14 @@ function Cifra({ etiqueta, valor, tono, Icono }: CifraProps) {
       </div>
     </div>
   );
+}
+
+const plural = (n: number, singular: string, pluralTexto: string) =>
+  `${n} ${n === 1 ? singular : pluralTexto}`;
+
+function detalleCompletados(revisores: readonly string[]): string {
+  if (revisores.length === 0) return "Nadie ha revisado hoy";
+  return `Revisaron hoy: ${revisores.join(", ")}`;
 }
 
 export function ResumenBandeja({ resumen }: ResumenBandejaProps) {
@@ -80,18 +95,25 @@ export function ResumenBandeja({ resumen }: ResumenBandejaProps) {
         <Cifra
           etiqueta="Reportes pendientes"
           valor={resumen.reportes_pendientes}
+          detalle={`de ${plural(resumen.total, "reporte", "reportes")} en el archivo`}
           tono="amber"
           Icono={Clock}
         />
         <Cifra
           etiqueta="Campos dudosos"
           valor={resumen.campos_dudosos}
+          detalle={
+            resumen.campos_dudosos === 0
+              ? "Nada por revisar"
+              : `en ${plural(resumen.reportes_con_dudosos, "reporte", "reportes")}`
+          }
           tono="brick"
           Icono={AlertTriangle}
         />
         <Cifra
           etiqueta="Completados hoy"
           valor={resumen.completados}
+          detalle={detalleCompletados(resumen.revisores_hoy)}
           tono="green"
           Icono={CheckCircle2}
         />
