@@ -20,7 +20,7 @@ export default function PaginaConfiguracion() {
         </p>
         <h1 className="text-display font-semibold tracking-tight text-ink">Configuración</h1>
         <p className="mt-2 text-base text-muted">
-          El bot de Telegram y, para administradores, las cuentas de usuario, lo que puede hacer cada una y su actividad.
+          El bot de Telegram y, para el administrador, las cuentas de usuario, la lectura con IA y la actividad.
         </p>
       </header>
       <ConfiguracionPestanas />
