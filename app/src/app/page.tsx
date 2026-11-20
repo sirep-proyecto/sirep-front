@@ -14,22 +14,81 @@ import { EstadosBandeja } from "@/features/revision/components/bandeja/estados-b
 import { ListaTarjetas } from "@/features/revision/components/bandeja/lista-tarjetas";
 import { ResumenBandeja } from "@/features/revision/components/bandeja/resumen-bandeja";
 import { TablaReportes } from "@/features/revision/components/bandeja/tabla-reportes";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowRight, Unlock } from "lucide-react";
 
+import { Boton } from "@/components/ui/boton";
+import { USUARIO_ACTUAL } from "@/config/sesion";
 import { BotonSubirReportes } from "@/features/revision/components/subida/boton-subir-reportes";
 import { ZonaSoltarPagina } from "@/features/revision/components/subida/zona-soltar-pagina";
 import { useEnvioRptech } from "@/features/revision/hooks/use-envio-rptech";
 import { useBandeja } from "@/features/revision/hooks/use-bandeja";
 import { usePermiso } from "@/config/use-permiso";
+import { useRepositorio } from "@/features/revision/providers/repositorio-contexto";
 import { useSubida } from "@/features/revision/providers/subida-contexto";
 
 export default function PaginaBandeja() {
+  const router = useRouter();
+  const repositorio = useRepositorio();
   const bandeja = useBandeja();
   const { estado: subida } = useSubida();
   const envio = useEnvioRptech(bandeja.refrescar);
-  // El envío a RP-TECH es manual y solo para quien puede cerrar reportes
-  // (el backend también lo exige en /reportes/:numero/importar e /importar-lote).
   const puedeEnviar = usePermiso("cerrar_reportes");
+  const esAdmin = usePermiso("gestionar_usuarios");
+  const puedeUsarCola = usePermiso("usar_cola");
+  const puedeEditar = usePermiso("editar_campos");
+  const puedeSubir = usePermiso("subir_escaneos");
+  const esSoloIngestor = puedeSubir && !puedeEditar && !esAdmin;
+
+  const [tomandoSiguiente, setTomandoSiguiente] = useState(false);
+  const [liberandoNumero, setLiberandoNumero] = useState<string | null>(null);
+  const [avisoCola, setAvisoCola] = useState<string | null>(null);
+
+  const miReservaActiva = bandeja.reportes.find(
+    (r) =>
+      r.reservado_por &&
+      (r.reservado_por_id === USUARIO_ACTUAL.id ||
+        r.reservado_por.toLowerCase() === USUARIO_ACTUAL.nombre.toLowerCase()),
+  );
+
+  async function manejarSiguienteReporte() {
+    if (!repositorio.tomarSiguienteReporte || tomandoSiguiente) return;
+    setTomandoSiguiente(true);
+    setAvisoCola(null);
+    try {
+      const res = await repositorio.tomarSiguienteReporte();
+      bandeja.refrescar();
+      if (res.numero_reporte) {
+        router.push(`/reportes/${encodeURIComponent(res.numero_reporte)}`);
+      } else {
+        setAvisoCola(res.mensaje || "No hay reportes pendientes en la cola.");
+      }
+    } catch (e) {
+      setAvisoCola(
+        e instanceof Error ? e.message : "No se pudo reservar el siguiente reporte.",
+      );
+    } finally {
+      setTomandoSiguiente(false);
+    }
+  }
+
+  async function manejarLiberarReporte(numero: string) {
+    if (!repositorio.liberarReporte || liberandoNumero) return;
+    setLiberandoNumero(numero);
+    setAvisoCola(null);
+    try {
+      const res = await repositorio.liberarReporte(numero);
+      setAvisoCola(res.mensaje);
+      bandeja.refrescar();
+    } catch (e) {
+      setAvisoCola(
+        e instanceof Error ? e.message : "No se pudo liberar la reserva.",
+      );
+    } finally {
+      setLiberandoNumero(null);
+    }
+  }
 
   // Cada reporte que termina de leer la IA se refleja en la bandeja de
   // inmediato, sin esperar al aviso en vivo (que puede no llegar).
@@ -51,20 +110,66 @@ export default function PaginaBandeja() {
       <header className="max-w-2xl pt-10 pb-7">
         <p className="mb-2 inline-flex items-center gap-2 text-micro font-medium uppercase tracking-label text-petrol-700">
           <span aria-hidden="true" className="size-1.5 rounded-full bg-petrol-600" />
-          Revisión técnica
+          {esSoloIngestor ? "Ingesta de documentos" : "Revisión técnica"}
         </p>
         <h1 className="text-display font-semibold tracking-tight text-ink">
-          Bandeja de revisión
+          {esSoloIngestor ? "Mis cargas de reportes" : "Bandeja de revisión"}
         </h1>
         <p className="mt-2 text-base text-muted">
-          Reportes escaneados: el modelo lee el documento y solo lo dudoso
-          espera tu revisión, junto al recorte del escaneo.
+          {esSoloIngestor
+            ? "Sube los PDFs escaneados y verifica el estado de tus cargas (procesado, duplicado o error)."
+            : "Toma el siguiente reporte pendiente de la cola con reserva o revisa los campos dudosos junto al recorte del escaneo."}
         </p>
       </header>
-      <div className="pb-7">
+      <div className="flex flex-wrap items-center gap-2.5 pb-7">
+        {puedeUsarCola ? (
+          <>
+            <Boton
+              variante="primario"
+              tamano="lg"
+              onClick={() => void manejarSiguienteReporte()}
+              disabled={tomandoSiguiente}
+            >
+              <ArrowRight className="size-4" aria-hidden="true" />
+              {tomandoSiguiente
+                ? "Buscando en la cola..."
+                : miReservaActiva
+                  ? `Continuar mi reserva (N° ${miReservaActiva.numero_reporte})`
+                  : "Siguiente reporte"}
+            </Boton>
+            {miReservaActiva ? (
+              <Boton
+                variante="secundario"
+                tamano="sm"
+                onClick={() => void manejarLiberarReporte(miReservaActiva.numero_reporte)}
+                disabled={liberandoNumero === miReservaActiva.numero_reporte}
+                title="Devolver mi reporte reservado a la cola"
+              >
+                <Unlock className="size-4" aria-hidden="true" />
+                Liberar mi reserva
+              </Boton>
+            ) : null}
+          </>
+        ) : null}
         <BotonSubirReportes />
       </div>
       </div>
+
+      {avisoCola ? (
+        <div
+          role="status"
+          className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-petrol-200 bg-petrol-50 px-4 py-2.5 text-meta text-petrol-800"
+        >
+          <span>{avisoCola}</span>
+          <button
+            type="button"
+            onClick={() => setAvisoCola(null)}
+            className="text-micro font-medium underline cursor-pointer"
+          >
+            Cerrar
+          </button>
+        </div>
+      ) : null}
 
       {conArchivo ? (
         <>
@@ -82,7 +187,7 @@ export default function PaginaBandeja() {
             onLimpiar={bandeja.limpiarFiltros}
             porEnviar={bandeja.porEnviar}
             enviandoLote={envio.enviandoLote}
-            onEnviarLote={puedeEnviar ? envio.enviarLote : undefined}
+            onEnviarLote={esAdmin ? envio.enviarLote : undefined}
           />
         </>
       ) : null}
@@ -115,6 +220,8 @@ export default function PaginaBandeja() {
             ruta="/reportes/"
             enviando={envio.enviando}
             onEnviar={puedeEnviar ? envio.enviar : undefined}
+            onLiberar={esAdmin ? manejarLiberarReporte : undefined}
+            liberandoNumero={liberandoNumero}
           />
           <ListaTarjetas
             reportes={bandeja.reportes}

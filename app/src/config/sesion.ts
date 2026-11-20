@@ -9,6 +9,8 @@ export interface UsuarioActual {
   nombre: string;
   iniciales: string;
   rol: string;
+  /** Roles asignados a la persona (SIREP-S4-T01: una persona puede tener más de un rol). */
+  roles?: string[];
   /** Acciones que esta cuenta puede hacer (las decide un administrador). */
   permisos: string[];
 }
@@ -41,10 +43,12 @@ const USUARIO_POR_DEFECTO: UsuarioActual = {
 };
 
 const ETIQUETAS_ROL: Record<string, string> = {
-  admin: "Administrador",
-  supervisor: "Supervisor",
+  administrador: "Administrador",
+  ingestor: "Ingestor",
   revisor: "Revisor",
-  operador: "Operador",
+  admin: "Administrador",
+  supervisor: "Revisor",
+  operador: "Ingestor",
 };
 
 /** Nombre legible del rol (el backend manda admin, revisor u operador). */

@@ -92,6 +92,29 @@ export interface Reporte {
   /** Último rechazo o fallo del envío a RP-TECH, con el motivo por campo. */
   rptech_error?: ErrorRptech | null;
   rptech_enviado_en?: string | null;
+  /** SIREP-S4-T03: Reserva activa de la cola (expira a las 4 horas). */
+  reservado_por_id?: string | null;
+  reservado_por?: string | null;
+  reservado_en?: string | null;
+  reserva_expira_en?: string | null;
+  /** SIREP-S4-T08: Estado de doble revisión aleatoria del 5%. */
+  doble_revision_pendiente?: boolean;
+  doble_revision_estado?: "pendiente" | "completada" | null;
+  doble_revision_coincidencia?: number | null;
+}
+
+export interface RespuestaSiguienteCola {
+  status: "asignado" | "reserva_existente" | "cola_vacia";
+  numero_reporte: string | null;
+  mensaje: string;
+  reporte: Reporte | null;
+}
+
+export interface RespuestaLiberarCola {
+  status: "liberado" | "sin_reserva";
+  numero_reporte: string;
+  mensaje: string;
+  reporte: Reporte;
 }
 
 export interface ErrorRptech {
@@ -169,6 +192,10 @@ export interface RepositorioReportes {
   enviarARptech(numero: string): Promise<RespuestaEnvio>;
   /** Envía en lote todos los reportes listos (`POST /reportes/importar-lote`). */
   enviarLoteARptech(): Promise<ResumenLote>;
+  /** SIREP-S4-T03: Toma el siguiente reporte pendiente de la cola con reserva (`POST /reportes/cola/siguiente`). */
+  tomarSiguienteReporte?(): Promise<RespuestaSiguienteCola>;
+  /** SIREP-S4-T03: Libera un reporte reservado (`POST /reportes/:numero/liberar`). */
+  liberarReporte?(numero: string): Promise<RespuestaLiberarCola>;
 }
 
 export type { IdCampo, IdSeccion };

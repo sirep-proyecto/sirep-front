@@ -5,7 +5,13 @@
 
 import { apiClient } from "@/lib/api";
 
-export type RolUsuario = "admin" | "supervisor" | "operador";
+export type RolUsuario =
+  | "administrador"
+  | "ingestor"
+  | "revisor"
+  | "admin"
+  | "supervisor"
+  | "operador";
 
 export interface PermisoDefinicion {
   id: string;
@@ -25,6 +31,7 @@ export interface CuentaUsuario {
   usuario: string;
   nombre: string;
   rol: RolUsuario;
+  roles?: RolUsuario[];
   permisos: string[];
   activo: boolean;
   creado_por: string | null;
@@ -42,6 +49,7 @@ export interface NuevaCuenta {
   nombre: string;
   password: string;
   rol: RolUsuario;
+  roles?: RolUsuario[];
   permisos: string[];
 }
 
@@ -49,6 +57,7 @@ export interface CambiosCuenta {
   nombre?: string;
   password?: string;
   rol?: RolUsuario;
+  roles?: RolUsuario[];
   permisos?: string[];
   activo?: boolean;
 }

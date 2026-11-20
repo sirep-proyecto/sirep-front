@@ -48,7 +48,9 @@ const iniciales = (nombre: string) =>
     .map((p) => p[0]?.toUpperCase() ?? "")
     .join("") || "?";
 
-const tonoRol = (rol: string) => (rol === "admin" ? "amber" : rol === "supervisor" ? "petrol" : "neutral");
+const esRolAdmin = (rol: string) => rol === "admin" || rol === "administrador";
+const tonoRol = (rol: string) =>
+  esRolAdmin(rol) ? "amber" : rol === "revisor" || rol === "supervisor" ? "petrol" : "neutral";
 
 interface SelectorPermisosProps {
   permisos: PermisoDefinicion[];
@@ -108,8 +110,9 @@ interface EditorCuentaProps {
 
 function EditorCuenta({ catalogo, cuenta, esPropia = false, onGuardado, onCancelar }: EditorCuentaProps) {
   const nueva = !cuenta;
-  const esCuentaAdmin = cuenta?.rol === "admin";
-  const rolInicial: RolUsuario = cuenta?.rol ?? "supervisor";
+  const esCuentaAdmin = Boolean(cuenta && esRolAdmin(cuenta.rol));
+  const rolPorDefecto = (catalogo.roles.find((r) => !esRolAdmin(r.id))?.id ?? "revisor") as RolUsuario;
+  const rolInicial: RolUsuario = cuenta?.rol ?? rolPorDefecto;
   const porDefecto = (rol: RolUsuario) =>
     catalogo.roles.find((r: RolDefinicion) => r.id === rol)?.permisos_por_defecto ?? [];
 
@@ -117,6 +120,9 @@ function EditorCuenta({ catalogo, cuenta, esPropia = false, onGuardado, onCancel
   const [nombre, setNombre] = useState(cuenta?.nombre ?? "");
   const [password, setPassword] = useState("");
   const [rol, setRol] = useState<RolUsuario>(rolInicial);
+  const [rolesSeleccionados, setRolesSeleccionados] = useState<RolUsuario[]>(
+    cuenta?.roles && cuenta.roles.length > 0 ? cuenta.roles : [rolInicial],
+  );
   const [permisos, setPermisos] = useState<string[]>(cuenta?.permisos ?? porDefecto(rolInicial));
   const [activo, setActivo] = useState(cuenta?.activo ?? true);
   const [trabajando, setTrabajando] = useState(false);
@@ -125,8 +131,33 @@ function EditorCuenta({ catalogo, cuenta, esPropia = false, onGuardado, onCancel
 
   function cambiarRol(nuevo: RolUsuario) {
     setRol(nuevo);
-    // Al cambiar de rol se parte de lo que ese rol trae; después se puede ajustar.
-    setPermisos(porDefecto(nuevo).filter((p) => nuevo === "admin" || p !== "gestionar_usuarios"));
+    const nuevaLista: RolUsuario[] = rolesSeleccionados.includes(nuevo)
+      ? [nuevo, ...rolesSeleccionados.filter((r) => r !== nuevo)]
+      : [nuevo];
+    setRolesSeleccionados(nuevaLista);
+    const unidos = new Set<string>();
+    for (const r of nuevaLista) {
+      for (const p of porDefecto(r)) {
+        if (esRolAdmin(r) || p !== "gestionar_usuarios") unidos.add(p);
+      }
+    }
+    setPermisos(Array.from(unidos));
+  }
+
+  function alternarRolAdicional(rolExtra: RolUsuario) {
+    if (rolExtra === rol) return;
+    const existe = rolesSeleccionados.includes(rolExtra);
+    const nuevaLista = existe
+      ? rolesSeleccionados.filter((r) => r !== rolExtra)
+      : [...rolesSeleccionados, rolExtra];
+    setRolesSeleccionados(nuevaLista);
+    const unidos = new Set<string>();
+    for (const r of nuevaLista) {
+      for (const p of porDefecto(r)) {
+        if (esRolAdmin(r) || p !== "gestionar_usuarios") unidos.add(p);
+      }
+    }
+    setPermisos(Array.from(unidos));
   }
 
   async function guardar(evento: FormEvent<HTMLFormElement>) {
@@ -135,13 +166,20 @@ function EditorCuenta({ catalogo, cuenta, esPropia = false, onGuardado, onCancel
     setError(null);
     try {
       if (nueva) {
-        const creada = await crearUsuario({ usuario: usuario.trim(), nombre: nombre.trim(), password, rol, permisos });
+        const creada = await crearUsuario({
+          usuario: usuario.trim(),
+          nombre: nombre.trim(),
+          password,
+          rol,
+          roles: rolesSeleccionados,
+          permisos,
+        });
         onGuardado(`Cuenta "${creada.usuario}" creada. Ya puede iniciar sesión.`);
       } else {
-        // La cuenta de administrador solo cambia de nombre y de contraseña.
+        // Un usuario no puede cambiar su propio rol, permisos ni desactivarse; a otras cuentas sí se les puede asignar cualquiera de los 3 roles.
         await actualizarUsuario(cuenta.id, {
           nombre: nombre.trim(),
-          ...(esCuentaAdmin ? {} : { rol, permisos, activo }),
+          ...(esPropia ? {} : { rol, roles: rolesSeleccionados, permisos, activo }),
           ...(password ? { password } : {}),
         });
         onGuardado(`Cambios guardados en "${cuenta.usuario}".`);
@@ -223,17 +261,36 @@ function EditorCuenta({ catalogo, cuenta, esPropia = false, onGuardado, onCancel
             id={idCampo("rol")}
             value={rol}
             onChange={(e) => cambiarRol(e.target.value as RolUsuario)}
-            disabled={trabajando || esPropia || esCuentaAdmin}
+            disabled={trabajando || esPropia}
             className={CLASE_SELECT}
           >
-            {catalogo.roles.filter((r) => esCuentaAdmin || r.id !== "admin").map((r) => (
+            {catalogo.roles.map((r) => (
               <option key={r.id} value={r.id}>
                 {r.etiqueta}
               </option>
             ))}
           </select>
-          {esCuentaAdmin ? (
-            <p className="text-micro text-muted">Es la única cuenta de administrador: no cambia de rol.</p>
+          {!esRolAdmin(rol) ? (
+            <div className="mt-1.5 flex flex-wrap items-center gap-3">
+              <span className="text-micro text-muted">Roles adicionales:</span>
+              {catalogo.roles
+                .filter((r) => !esRolAdmin(r.id) && r.id !== rol)
+                .map((r) => (
+                  <label key={r.id} className="inline-flex cursor-pointer items-center gap-1.5 text-micro text-ink">
+                    <input
+                      type="checkbox"
+                      checked={rolesSeleccionados.includes(r.id)}
+                      disabled={trabajando || esPropia}
+                      onChange={() => alternarRolAdicional(r.id)}
+                      className="size-3.5 accent-[var(--petrol-600)]"
+                    />
+                    También {r.etiqueta}
+                  </label>
+                ))}
+            </div>
+          ) : null}
+          {esPropia ? (
+            <p className="text-micro text-muted">No puedes cambiar tu propio rol ni desactivar tu propia cuenta.</p>
           ) : null}
         </div>
       </div>
@@ -241,12 +298,12 @@ function EditorCuenta({ catalogo, cuenta, esPropia = false, onGuardado, onCancel
       <SelectorPermisos
         permisos={catalogo.permisos}
         marcados={permisos}
-        esAdmin={rol === "admin"}
-        deshabilitado={trabajando}
+        esAdmin={esRolAdmin(rol)}
+        deshabilitado={trabajando || esPropia}
         onCambio={setPermisos}
       />
 
-      {!nueva && !esCuentaAdmin ? (
+      {!nueva ? (
         <label className="flex cursor-pointer items-center gap-2.5 text-meta text-ink has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60">
           <input
             type="checkbox"
@@ -410,11 +467,13 @@ export function ConfiguracionUsuarios() {
                     </p>
                   </div>
                   <Insignia tono={tonoRol(cuenta.rol)}>
-                    {datos.catalogo.roles.find((r) => r.id === cuenta.rol)?.etiqueta ?? cuenta.rol}
+                    {(cuenta.roles && cuenta.roles.length > 1 ? cuenta.roles : [cuenta.rol])
+                      .map((rId) => datos.catalogo.roles.find((r) => r.id === rId)?.etiqueta ?? rId)
+                      .join(" + ")}
                   </Insignia>
                   {cuenta.activo ? <Insignia tono="green">Activa</Insignia> : <Insignia tono="brick">Desactivada</Insignia>}
                   <span className="hidden text-micro text-muted lg:inline">
-                    {cuenta.rol === "admin" ? "Todos los permisos" : `${cuenta.permisos.length} de ${datos.catalogo.permisos.length - 1} permisos`}
+                    {esRolAdmin(cuenta.rol) ? "Todos los permisos" : `${cuenta.permisos.length} de ${datos.catalogo.permisos.length - 1} permisos`}
                   </span>
                   <Boton
                     variante="secundario"

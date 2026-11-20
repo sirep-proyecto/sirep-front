@@ -34,6 +34,9 @@ interface TablaReportesProps {
   /** Sin `onEnviar` (vista de calibración o sin permiso) no se muestran botones de envío. */
   enviando?: ReadonlySet<string>;
   onEnviar?: (numero: string) => void;
+  /** SIREP-S4-T03: Permite al administrador liberar manualmente reportes reservados. */
+  onLiberar?: (numero: string) => void;
+  liberandoNumero?: string | null;
 }
 
 interface FilaReporteProps {
@@ -41,6 +44,8 @@ interface FilaReporteProps {
   ruta: string;
   enviando: boolean;
   onEnviar?: (numero: string) => void;
+  onLiberar?: (numero: string) => void;
+  liberando?: boolean;
 }
 
 const CLASE_CELDA = "border-b border-line px-4 py-2.5";
@@ -48,7 +53,7 @@ const CLASE_CELDA = "border-b border-line px-4 py-2.5";
 const CLASE_CABECERA =
   "border-b border-line px-4 py-3 text-left text-micro font-medium uppercase tracking-label text-muted";
 
-function FilaReporte({ reporte, ruta, enviando, onEnviar }: FilaReporteProps) {
+function FilaReporte({ reporte, ruta, enviando, onEnviar, onLiberar, liberando }: FilaReporteProps) {
   const {
     numero_reporte,
     cliente,
@@ -58,6 +63,7 @@ function FilaReporte({ reporte, ruta, enviando, onEnviar }: FilaReporteProps) {
     origen,
     campos,
     fecha_reporte,
+    reservado_por,
   } = reporte;
 
   return (
@@ -99,7 +105,28 @@ function FilaReporte({ reporte, ruta, enviando, onEnviar }: FilaReporteProps) {
         <CeldaDudosos campos={campos} />
       </td>
       <td className={CLASE_CELDA}>
-        <CeldaRevisores campos={campos} />
+        <div className="flex flex-col gap-1">
+          <CeldaRevisores campos={campos} />
+          {reservado_por ? (
+            <span className="relative z-10 inline-flex flex-wrap items-center gap-1.5 text-micro font-medium text-amber-700">
+              <span>Reservado: {reservado_por}</span>
+              {onLiberar ? (
+                <button
+                  type="button"
+                  disabled={liberando}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onLiberar(numero_reporte);
+                  }}
+                  className="rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[11px] font-semibold text-amber-900 hover:bg-amber-100 disabled:opacity-50 cursor-pointer"
+                >
+                  {liberando ? "Liberando…" : "Liberar"}
+                </button>
+              ) : null}
+            </span>
+          ) : null}
+        </div>
       </td>
       <td className={`${CLASE_CELDA} font-mono text-meta text-faint`}>
         <div className="flex flex-wrap items-center gap-2">
@@ -129,7 +156,14 @@ function generarNumerosPagina(actual: number, total: number): (number | "...")[]
   return [1, "...", actual - 1, actual, actual + 1, "...", total];
 }
 
-export function TablaReportes({ reportes, ruta, enviando = new Set(), onEnviar }: TablaReportesProps) {
+export function TablaReportes({
+  reportes,
+  ruta,
+  enviando = new Set(),
+  onEnviar,
+  onLiberar,
+  liberandoNumero,
+}: TablaReportesProps) {
   const [paginaActual, setPaginaActual] = useState(1);
 
   const totalPaginas = Math.max(1, Math.ceil(reportes.length / ELEMENTOS_POR_PAGINA));
@@ -192,6 +226,8 @@ export function TablaReportes({ reportes, ruta, enviando = new Set(), onEnviar }
                 ruta={ruta}
                 enviando={enviando.has(reporte.numero_reporte)}
                 onEnviar={onEnviar}
+                onLiberar={onLiberar}
+                liberando={liberandoNumero === reporte.numero_reporte}
               />
             ))}
           </tbody>

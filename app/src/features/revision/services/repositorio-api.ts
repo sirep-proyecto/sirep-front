@@ -16,6 +16,8 @@ import type {
   IdCampo,
   RepositorioReportes,
   Reporte,
+  RespuestaLiberarCola,
+  RespuestaSiguienteCola,
 } from "@/features/revision/types/dominio";
 
 import { ErrorRepositorio } from "./errores";
@@ -106,6 +108,22 @@ export function crearRepositorioApi(): RepositorioReportes {
         cache: "no-store",
         timeoutMs: 300_000,
       });
+    },
+
+    tomarSiguienteReporte() {
+      return apiClient.post<RespuestaSiguienteCola>(
+        "/reportes/cola/siguiente",
+        undefined,
+        { cache: "no-store" },
+      );
+    },
+
+    liberarReporte(numero: string) {
+      return apiClient.post<RespuestaLiberarCola>(
+        `/reportes/${encodeURIComponent(numero)}/liberar`,
+        undefined,
+        { cache: "no-store" },
+      );
     },
   };
 }
