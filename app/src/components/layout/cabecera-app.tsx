@@ -10,7 +10,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileSpreadsheet, Inbox, LogOut, Map, Settings } from "lucide-react";
+import { BarChart3, FileSpreadsheet, Inbox, LogOut, Map, Settings } from "lucide-react";
 
 import { Boton } from "@/components/ui/boton";
 import { MOSTRAR_CALIBRACION } from "@/config/entorno";
@@ -59,6 +59,7 @@ function clasesEnlace(activo: boolean): string {
 export function CabeceraApp() {
   const ruta = usePathname();
   const enBandeja = ruta === "/" || ruta.startsWith("/reportes");
+  const enTablero = ruta.startsWith("/tablero");
   const enCalibracion = ruta.startsWith("/dev/regiones");
   const enConfiguracion = ruta.startsWith("/configuracion");
 
@@ -67,6 +68,7 @@ export function CabeceraApp() {
   );
   const [exportando, setExportando] = useState(false);
   const puedeExportar = usePermiso("exportar");
+  const esAdmin = usePermiso("gestionar_usuarios");
 
   useEffect(() => {
     setUsuarioSesion(obtenerUsuarioSesion());
@@ -134,6 +136,16 @@ export function CabeceraApp() {
                 <Inbox className="size-4" aria-hidden="true" />
                 <span className="max-sm:sr-only">Bandeja</span>
               </Link>
+              {esAdmin ? (
+                <Link
+                  href="/tablero"
+                  aria-current={enTablero ? "page" : undefined}
+                  className={clasesEnlace(enTablero)}
+                >
+                  <BarChart3 className="size-4" aria-hidden="true" />
+                  <span className="max-sm:sr-only">Tablero</span>
+                </Link>
+              ) : null}
               {MOSTRAR_CALIBRACION ? (
                 <Link
                   href="/dev/regiones"

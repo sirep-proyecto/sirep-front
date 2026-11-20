@@ -39,12 +39,12 @@ export const ETIQUETAS_RPTECH: Record<
   },
   reintentar: {
     etiqueta: "Envío pendiente",
-    descripcion: "No hubo respuesta de RP-TECH. Vuelve a enviarlo con el botón Reenviar.",
+    descripcion: "Falló el envío automático a RP-TECH. Vuelve a intentarlo con Reenviar.",
     tono: "amber",
   },
   por_enviar: {
     etiqueta: "Por enviar",
-    descripcion: "Revisado. Envíalo con el botón Enviar o con Enviar completados.",
+    descripcion: "Al aprobar el reporte se envía automáticamente a RP-TECH (puedes enviarlo aquí si quedó pendiente).",
     tono: "neutral",
   },
 };

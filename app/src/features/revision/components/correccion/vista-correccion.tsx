@@ -8,21 +8,28 @@
 
 import { useState, type CSSProperties } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
+  ArrowRight,
   ChevronLeft,
   ChevronRight,
   Eye,
   EyeOff,
   Maximize2,
+  Unlock,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
 
 import { Boton } from "@/components/ui/boton";
+import { USUARIO_ACTUAL } from "@/config/sesion";
+import { useRepositorio } from "@/features/revision/providers/repositorio-contexto";
 import { BarraAccionesReporte } from "@/features/revision/components/correccion/barra-acciones-reporte";
 import { CabeceraReporte } from "@/features/revision/components/correccion/cabecera-reporte";
 import { AvisoRptech } from "@/features/revision/components/correccion/aviso-rptech";
+import { AvisoEnvioRptech } from "@/features/revision/components/bandeja/aviso-envio";
+import { useEnvioRptech } from "@/features/revision/hooks/use-envio-rptech";
 import {
   CargandoRevision,
   ErrorDeCarga,
@@ -61,8 +68,15 @@ interface VistaCorreccionProps {
 }
 
 export function VistaCorreccion({ numero }: VistaCorreccionProps) {
+  const router = useRouter();
+  const repositorio = useRepositorio();
   const revision = useRevisionReporte(numero);
   const puedeEditar = usePermiso("editar_campos");
+  const puedeCerrar = usePermiso("cerrar_reportes");
+  const puedeUsarCola = usePermiso("usar_cola");
+  const esAdmin = usePermiso("gestionar_usuarios");
+  const envio = useEnvioRptech(revision.recargar);
+  const [trabajandoCola, setTrabajandoCola] = useState(false);
 
   const [modoEdicionElegido, setModoEdicion] = useState(false);
   // Sin permiso de edición el reporte queda en solo lectura aunque se intente activar.
@@ -149,8 +163,8 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
 
   return (
     <div className="mx-auto flex w-full max-w-(--layout-max) flex-col gap-4 px-(--space-gutter) pb-6 pt-3">
-      {/* Barra de navegación rápida a la bandeja */}
-      <nav aria-label="Navegación secundaria">
+      {/* Barra de navegación rápida a la bandeja y control de reserva (SIREP-S4-T03) */}
+      <nav aria-label="Navegación secundaria" className="flex flex-wrap items-center justify-between gap-2">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 text-meta font-medium text-muted hover:text-ink transition-colors"
@@ -158,6 +172,64 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
           <ArrowLeft className="size-4" />
           Volver a la bandeja de revisión
         </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          {reporte.reservado_por ? (
+            <span className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-micro font-medium text-amber-800">
+              Reservado por {reporte.reservado_por}
+            </span>
+          ) : null}
+          {reporte.reservado_por &&
+          repositorio.liberarReporte &&
+          (esAdmin ||
+            reporte.reservado_por_id === USUARIO_ACTUAL.id ||
+            reporte.reservado_por.toLowerCase() === USUARIO_ACTUAL.nombre.toLowerCase()) ? (
+            <Boton
+              variante="secundario"
+              tamano="sm"
+              disabled={trabajandoCola}
+              onClick={async () => {
+                if (!repositorio.liberarReporte) return;
+                setTrabajandoCola(true);
+                try {
+                  await repositorio.liberarReporte(reporte.numero_reporte);
+                  router.push("/");
+                } finally {
+                  setTrabajandoCola(false);
+                }
+              }}
+            >
+              <Unlock className="size-3.5" aria-hidden="true" />
+              Liberar reserva
+            </Boton>
+          ) : null}
+          {puedeUsarCola && repositorio.tomarSiguienteReporte && revision.pendientes.dudosos === 0 ? (
+            <Boton
+              variante="primario"
+              tamano="sm"
+              disabled={trabajandoCola}
+              onClick={async () => {
+                if (!repositorio.tomarSiguienteReporte) return;
+                setTrabajandoCola(true);
+                try {
+                  if (reporte.reservado_por && repositorio.liberarReporte) {
+                    await repositorio.liberarReporte(reporte.numero_reporte);
+                  }
+                  const sig = await repositorio.tomarSiguienteReporte();
+                  if (sig.numero_reporte) {
+                    router.push(`/reportes/${encodeURIComponent(sig.numero_reporte)}`);
+                  } else {
+                    router.push("/");
+                  }
+                } finally {
+                  setTrabajandoCola(false);
+                }
+              }}
+            >
+              <ArrowRight className="size-3.5" aria-hidden="true" />
+              Siguiente reporte
+            </Boton>
+          ) : null}
+        </div>
       </nav>
 
       {/* Barra de herramientas superior */}
@@ -170,7 +242,14 @@ export function VistaCorreccion({ numero }: VistaCorreccionProps) {
 
       {/* Cabecera contextual del reporte */}
       <CabeceraReporte reporte={reporte} />
-      <AvisoRptech reporte={reporte} />
+      <AvisoEnvioRptech aviso={envio.aviso} onCerrar={envio.cerrarAviso} />
+      <AvisoRptech
+        reporte={reporte}
+        reintentando={envio.enviando.has(reporte.numero_reporte)}
+        onReintentar={
+          puedeCerrar ? () => void envio.enviar(reporte.numero_reporte) : undefined
+        }
+      />
 
       {/* Barra de progreso de revisión de campos dudosos */}
       <ProgresoRevision
