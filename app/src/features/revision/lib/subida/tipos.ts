@@ -34,6 +34,8 @@ export interface RespuestaUpload {
   estado: string;
   camposDudosos: string[];
   totalPaginas?: number | null;
+  /** Con qué clave de Gemini se leyó: la propia de quien sube, la de la empresa o la de la empresa porque la propia falló. */
+  claveIa?: { origen: "personal" | "empresa" | "respaldo_empresa"; aviso: string | null } | null;
 }
 
 export type CodigoDuplicado =

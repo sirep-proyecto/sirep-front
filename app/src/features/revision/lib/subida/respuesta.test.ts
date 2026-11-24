@@ -155,4 +155,14 @@ describe("interpretarRespuestaHttp", () => {
       cuerpo: "Bad Gateway",
     });
   });
+
+  it("lee con qué clave de Gemini se leyó el reporte, y la ignora si viene mal", () => {
+    const base = { escaneoId: "e", numeroReporte: "1", estado: "procesado", camposDudosos: [] };
+    expect(leerRespuestaUpload({ ...base, claveIa: { origen: "respaldo_empresa", aviso: "Tu clave falló" } })?.claveIa).toEqual({
+      origen: "respaldo_empresa",
+      aviso: "Tu clave falló",
+    });
+    expect(leerRespuestaUpload({ ...base, claveIa: { origen: "otra" } })?.claveIa).toBeNull();
+    expect(leerRespuestaUpload(base)?.claveIa).toBeNull();
+  });
 });

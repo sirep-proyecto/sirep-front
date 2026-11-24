@@ -1,30 +1,35 @@
 /**
- * Responsabilidad: pestañas de la página de Configuración. "Bot de Telegram" lo
- * ve toda cuenta; "Usuarios y accesos", "Lectura con IA" y "Actividad" solo el
+ * Responsabilidad: pestañas de la página de Configuración. "Bot de Telegram" y
+ * "Mi clave de Gemini" los ve toda cuenta; "Usuarios y accesos", "Lectura con IA" y "Actividad" solo el
  * administrador principal (el único con el permiso gestionar_usuarios).
  */
 
 "use client";
 
 import { useState } from "react";
-import { History, Send, Sparkles, Users } from "lucide-react";
+import { History, KeyRound, Send, Sparkles, Users } from "lucide-react";
 
 import { usePermiso } from "@/config/use-permiso";
 
 import { ConfiguracionActividad } from "./configuracion-actividad";
 import { ConfiguracionBot } from "./configuracion-bot";
+import { ConfiguracionClavesUsuarios } from "./configuracion-claves-usuarios";
 import { ConfiguracionIa } from "./configuracion-ia";
+import { ConfiguracionMiClave } from "./configuracion-mi-clave";
 import { ConfiguracionUsuarios } from "./configuracion-usuarios";
 
-type Pestana = "bot" | "usuarios" | "ia" | "actividad";
+type Pestana = "bot" | "mi-clave" | "usuarios" | "ia" | "actividad";
 
 export function ConfiguracionPestanas() {
   const puedeGestionarUsuarios = usePermiso("gestionar_usuarios");
   const [elegida, setElegida] = useState<Pestana>("bot");
-  const activa: Pestana = elegida !== "bot" && !puedeGestionarUsuarios ? "bot" : elegida;
+  // Las pestañas de administración vuelven a "Bot de Telegram" si la cuenta no tiene permiso
+  const deAdmin = elegida === "usuarios" || elegida === "ia" || elegida === "actividad";
+  const activa: Pestana = deAdmin && !puedeGestionarUsuarios ? "bot" : elegida;
 
   const pestanas: { id: Pestana; etiqueta: string; Icono: typeof Send }[] = [
     { id: "bot", etiqueta: "Bot de Telegram", Icono: Send },
+    { id: "mi-clave", etiqueta: "Mi clave de Gemini", Icono: KeyRound },
     ...(puedeGestionarUsuarios
       ? [
           { id: "usuarios" as const, etiqueta: "Usuarios y accesos", Icono: Users },
@@ -73,7 +78,13 @@ export function ConfiguracionPestanas() {
       <div role="tabpanel" id={`panel-${activa}`} aria-labelledby={`pestana-${activa}`}>
         {activa === "bot" ? <ConfiguracionBot /> : null}
         {activa === "usuarios" ? <ConfiguracionUsuarios /> : null}
-        {activa === "ia" ? <ConfiguracionIa /> : null}
+        {activa === "mi-clave" ? <ConfiguracionMiClave /> : null}
+        {activa === "ia" ? (
+          <div className="flex flex-col gap-5">
+            <ConfiguracionIa />
+            <ConfiguracionClavesUsuarios />
+          </div>
+        ) : null}
         {activa === "actividad" ? <ConfiguracionActividad /> : null}
       </div>
     </div>
