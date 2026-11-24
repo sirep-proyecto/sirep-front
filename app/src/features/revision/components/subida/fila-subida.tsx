@@ -98,6 +98,13 @@ function Estado({ item }: { item: ItemSubida }) {
             "sin N° detectado"
           )}{" "}
           · {textoDudas(item.resultado?.camposDudosos.length ?? 0)}
+          {item.resultado?.claveIa?.origen === "personal" ? <span className="text-muted"> · leído con tu clave</span> : null}
+          {item.resultado?.claveIa?.aviso ? (
+            <span className="mt-0.5 block text-amber-700">
+              <AlertTriangle className="mr-1.5 inline size-3.5 align-[-2px]" aria-hidden="true" />
+              {item.resultado.claveIa.aviso}
+            </span>
+          ) : null}
         </span>
       );
     }

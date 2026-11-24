@@ -141,7 +141,16 @@ export function leerRespuestaUpload(cuerpo: unknown): RespuestaUpload | null {
       ? objeto.camposDudosos.filter((campo): campo is string => typeof campo === "string")
       : [],
     totalPaginas: typeof paginas === "number" ? paginas : null,
+    claveIa: leerClaveIa(objeto.claveIa),
   };
+}
+
+/** `claveIa` de la respuesta, solo si viene bien formada (backends anteriores no la mandan). */
+function leerClaveIa(valor: unknown): RespuestaUpload["claveIa"] {
+  const objeto = comoObjeto(valor);
+  const origen = objeto?.origen;
+  if (origen !== "personal" && origen !== "empresa" && origen !== "respaldo_empresa") return null;
+  return { origen, aviso: texto(objeto?.aviso) ?? null };
 }
 
 /** Interpreta la respuesta cruda de un `XMLHttpRequest`. */
